@@ -1,3 +1,10 @@
 
 # Get ollama python client
 ollama
+
+# Audio library - TTS - STT
+SpeechRecognition
+# macOS: brew install portaudio
+# Linux (Debian): sudo apt-get install portaudio19-dev
+pyaudio
+gTTS
