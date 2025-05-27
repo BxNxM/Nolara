@@ -1,0 +1,42 @@
+#title-bar {
+    height: 3;
+    content-align: center middle;
+    background: black;
+}
+
+#main-layout {
+    height: 1fr;
+}
+
+#sidebar {
+    width: 25%;
+    padding: 1;
+    border: solid grey;
+}
+
+#chat-area {
+    width: 75%;
+}
+
+Log {
+    height: 1fr;
+    border: solid green;
+}
+
+ProgressBar {
+    height: 1;
+    margin: 0 1;
+}
+
+Input, Button {
+    height: 3;
+}
+
+#input_bar {
+    dock: bottom;
+    height: auto;
+}
+
+#quit-button {
+    margin-left: 1;
+}

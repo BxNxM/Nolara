@@ -7,56 +7,16 @@ import textwrap
 from lib import Models
 from lib import Chatbot
 
+def load_css():
+    with open("./textual.css", "r") as f:
+        textual_css = f.read()
+    return textual_css
+
+
 class EchoChatApp(App):
-    BINDINGS = [
-        ("q", "quit", "Quit"),
-        ("escape", "quit", "Quit"),
-    ]
-
-    CSS = """
-    #title-bar {
-        height: 3;
-        content-align: center middle;
-        background: black;
-    }
-
-    #main-layout {
-        height: 1fr;
-    }
-
-    #sidebar {
-        width: 25%;
-        padding: 1;
-        border: solid grey;
-    }
-
-    #chat-area {
-        width: 75%;
-    }
-
-    Log {
-        height: 1fr;
-        border: solid green;
-    }
-
-    ProgressBar {
-        height: 1;
-        margin: 0 1;
-    }
-
-    Input, Button {
-        height: 3;
-    }
-
-    #input_bar {
-        dock: bottom;
-        height: auto;
-    }
-
-    #quit-button {
-        margin-left: 1;
-    }
-    """
+    BINDINGS = [("q", "quit", "Quit"),
+                ("escape", "quit", "Quit"),]
+    CSS = load_css()
 
     def __init__(self):
         super().__init__()
