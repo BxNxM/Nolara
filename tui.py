@@ -1,30 +1,38 @@
 #!/usr/bin/env python3
 
+# https://textual.textualize.io/widget_gallery/
+
 from textual.app import App, ComposeResult
 from textual.containers import Vertical, Horizontal
-from textual.widgets import Input, Button, Log, Select, Static, ProgressBar
+from textual.widgets import Input, Button, Log, Select, Static, ProgressBar, Footer
 import asyncio
 import textwrap
+import time
 
+# LLM libraries
 from lib import Models
 from lib import Chatbot
 
+
 def load_css():
-    with open("./textual.css", "r") as f:
+    with open("./textual.tcss", "r") as f:
         textual_css = f.read()
     return textual_css
 
 
 class EchoChatApp(App):
-    BINDINGS = [("q", "quit", "Quit"),
-                ("escape", "quit", "Quit"),]
+    BINDINGS = [
+        ("q", "quit", "Quit"),
+        ("escape", "quit", "Quit"),
+    ]
     CSS = load_css()
 
     def __init__(self):
         super().__init__()
         self.chatbot = None
         self.model_dropdown = Models.get_chat_models_dropdown()
-        self.progress = ProgressBar(total=100)
+        self.progress = ProgressBar(total=100, id="progress-bar")
+        self.timer_display = Static("⏱️  Time taken: 0s", id="timer-display")
         self.dropdown = None
         self.chatbox = None
 
@@ -54,13 +62,18 @@ class EchoChatApp(App):
                 self.chatbox = Log(id="chat")
                 yield self.chatbox
 
-                yield self.progress
+                with Horizontal(id="progress-line"):
+                    yield self.progress
+                    yield self.timer_display
 
                 with Horizontal(id="input_bar"):
                     self.input = Input(placeholder="Type a message...", id="input")
                     yield self.input
                     yield Button("Send", id="send")
                     yield Button("Quit", id="quit-button")
+
+        # Footer showing keybindings (q or Esc to quit)
+        yield Footer(id="app-footer")
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "send":
@@ -79,8 +92,13 @@ class EchoChatApp(App):
         selected_option = self.dropdown.value
         self.init_model(selected_option)
 
+        self.chatbox.write_line("_" * (self.chatbox.size.width-4))
         self.chatbox.write_line(f"\nYou: {message}")
+        start_time = time.time()
         response = self._chat_model_process(message)
+        duration = time.time() - start_time
+        self.timer_display.update(f"⏱️  Time taken: {duration:.2f}s")
+
         if isinstance(response, list):
             self.chatbox.write_line(f"{selected_option}:")
             self.chatbox.write_lines(response)
@@ -94,7 +112,19 @@ class EchoChatApp(App):
 
         self.input.value = ""
 
-    def _chat_model_process(self, query):
+    def _wrap_response(self, response):
+        box_width = self.chatbox.size.width -4
+        response_lines = response.split('\n')
+        wrapped_response = []
+        for line in response_lines:
+            if len(line) > box_width:
+                # Wrap the response text to fit inside the Log widget width
+                wrapped_response += textwrap.wrap(response, width=box_width)
+            else:
+                wrapped_response.append(line)
+        return wrapped_response
+
+    def _chat_model_process(self, query, wrap=True):
         self.progress.progress = 100
         if self.chatbot:
             state, response = self.chatbot.chat(query)
@@ -103,11 +133,8 @@ class EchoChatApp(App):
             response = "No chatbot initialized"
         self.progress.progress = 0
 
-        box_width = 80
-        if len(response) > box_width:
-            # Wrap the response text to fit inside the Log widget width
-            max_width = self.chatbox.size.width or box_width  # Fallback width
-            response = textwrap.wrap(response, width=max_width - 4)
+        if wrap:
+            response = self._wrap_response(response)
 
         return response
 
