@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from textual.app import App, ComposeResult
 from textual.containers import Vertical, Horizontal
 from textual.widgets import Input, Button, Log, Select, Static, ProgressBar
@@ -21,7 +23,10 @@ class EchoChatApp(App):
     def __init__(self):
         super().__init__()
         self.chatbot = None
-        self.model_dropdown = Models.get_models_dropdown()
+        self.model_dropdown = Models.get_chat_models_dropdown()
+        self.progress = ProgressBar(total=100)
+        self.dropdown = None
+        self.chatbox = None
 
     def init_model(self, model_name):
         if self.chatbot:
@@ -38,17 +43,17 @@ class EchoChatApp(App):
             with Vertical(id="sidebar"):
                 self.dropdown = Select(
                     options=self.model_dropdown,
+                    value=self.model_dropdown[0][1],
                     prompt="Select a model...",
-                    id="dropdown"
+                    id="dropdown",
                 )
                 yield self.dropdown
 
             # Chat area
             with Vertical(id="chat-area"):
-                self.chat = Log(id="chat")
-                yield self.chat
+                self.chatbox = Log(id="chat")
+                yield self.chatbox
 
-                self.progress = ProgressBar(total=100)
                 yield self.progress
 
                 with Horizontal(id="input_bar"):
@@ -74,21 +79,22 @@ class EchoChatApp(App):
         selected_option = self.dropdown.value
         self.init_model(selected_option)
 
-        self.chat.write_line(f"You: {message}")
+        self.chatbox.write_line(f"\nYou: {message}")
         response = self._chat_model_process(message)
         if isinstance(response, list):
-            self.chat.write_line(f"{selected_option}")
-            self.chat.write_lines(response)
+            self.chatbox.write_line(f"{selected_option}:")
+            self.chatbox.write_lines(response)
         else:
-            self.chat.write_line(f"{selected_option}: {response}")
+            self.chatbox.write_line(f"{selected_option}: {response}")
+
+        # Animate progress bar
+        self.progress.progress = 100
+        await asyncio.sleep(0.3)
+        self.progress.progress = 0
 
         self.input.value = ""
 
     def _chat_model_process(self, query):
-        # Animate progress bar
-        #self.progress.progress = 100
-        #await asyncio.sleep(2)
-        #self.progress.progress = 0
         self.progress.progress = 100
         if self.chatbot:
             state, response = self.chatbot.chat(query)
@@ -100,7 +106,7 @@ class EchoChatApp(App):
         box_width = 80
         if len(response) > box_width:
             # Wrap the response text to fit inside the Log widget width
-            max_width = self.chat.size.width or box_width  # Fallback width
+            max_width = self.chatbox.size.width or box_width  # Fallback width
             response = textwrap.wrap(response, width=max_width - 4)
 
         return response
