@@ -9,6 +9,13 @@ def list_models():
     return ollama.list()['models']
 
 
+def get_models_dropdown():
+    models = list_models()
+    dropdown_options = [(f"{m.model.split(":")[0]} {m.details.parameter_size}", m.model) for m in models]
+    # Return list of tuples [("Visible name", "model name"), ...]
+    return dropdown_options
+
+
 def validate_model(model):
     models = [m.model for m in list_models()]
     if model not in models:
@@ -28,3 +35,5 @@ if __name__ == "__main__":
 
     print("\nValidating a model...")
     print(validate_model('gemma2:latest'))
+
+    pprint(get_models_as_dropdown())

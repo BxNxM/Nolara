@@ -8,3 +8,10 @@ SpeechRecognition
 # Linux (Debian): sudo apt-get install portaudio19-dev
 pyaudio
 gTTS
+
+# Wake word detection
+vosk
+sounddevice
+
+# GUI
+textual

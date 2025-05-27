@@ -12,13 +12,17 @@ class Agent:
 
     def run(self, query):
         response = self.chatbot.chat(query)[1]
+        result = {}
         # Handle the Tool Response
         for tool in response.message.tool_calls or []:
             function_to_call = self.tools_mapping.get(tool.function.name)
             if function_to_call:
-                print('Function output:', function_to_call(**tool.function.arguments))
+                result[tool.function.name] = function_to_call(**tool.function.arguments)
+                print('Function output:', result[tool.function.name])
             else:
-                print('Function not found:', tool.function.name)
+                result[tool.function.name] = f"Function {tool.function.name} not found"
+                print(result[tool.function.name])
+        return True, result
 
     def run_loop(self):
         while True:

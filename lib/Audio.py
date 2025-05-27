@@ -87,5 +87,6 @@ def echo_speech(language="en-US"):
 
 
 if __name__ == "__main__":
-    echo_speech(language="en-US")
+    text_to_speech("Nolara")
+    #echo_speech(language="en-US")
     #echo_speech(language="hu-HU")
