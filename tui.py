@@ -44,7 +44,7 @@ class EchoChatApp(App):
 
     def compose(self) -> ComposeResult:
         # Title bar with styled markup
-        yield Static("[b green]Nolora[/]", id="title-bar", markup=True)
+        yield Static("[b green]Nolara[/]", id="title-bar", markup=True)
 
         with Horizontal(id="main-layout"):
             # Sidebar with dropdown
