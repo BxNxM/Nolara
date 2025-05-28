@@ -32,18 +32,43 @@ pip install -r requirements.txt
 
 ### 1.3. Install models
 
+**Small profile**
+
+```bash
+ollama pull gemma2:latest
+ollama pull gemma3:4b
+ollama pull qwen3:8b
+```
+
+**Medium profile**
+
+```bash
+ollama pull gemma2:latest
+ollama pull gemma3:12b
+ollama pull qwen3:14b
+```
+
+
+#### Model informations
+
 Current promising models
 
-Chat models
+[gemma2 details](https://ollama.com/library/gemma2)
 
-```
-gemma3:12b                 f4031aab637d    8.1 GB
+[gemma3 details](https://ollama.com/library/gemma3)
+
+[qwen3 details](https://ollama.com/library/qwen3)
+
+```bash
+ollama list
+
 gemma2:latest              ff02c3702f32    5.4 GB
+gemma3:12b                 f4031aab637d    8.1 GB
 ```
 
 Reasoning models + Tools
 
-```
+```bash
 qwen3:14b                  7d7da67570e2    9.3 GB
 ```
 
@@ -51,6 +76,7 @@ qwen3:14b                  7d7da67570e2    9.3 GB
 
 ```bash
 cd Nolara
+source .venv/bin/activate
 ./tui.py
 ```
 

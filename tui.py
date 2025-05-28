@@ -33,14 +33,14 @@ class AIChatApp(App):
 
     def __init__(self):
         self.chatbot:Chatbot.ChatOllama|None = None
-        self.model_dropdown = Models.get_chat_models_dropdown()
+        self.model_dropdown_content = Models.get_chat_models_dropdown()
         # Initialize global textual.widgets widgets
         self.progress_bar = ProgressBar(total=100, id="progress-bar")
         self.timer_display = Static("⏱️  Time taken: 0s", id="timer-display")
         # Initialize global parameters for textual.widgets
         self.chatbox:Log|None = None
         self.input:Input|None = None
-        self.dropdown:Select|None = None
+        self.model_dropdown:Select|None = None
         self.agents_enabled = False
         super().__init__()
 
@@ -63,13 +63,13 @@ class AIChatApp(App):
         with Horizontal(id="main-layout"):
             # Sidebar with dropdown
             with Vertical(id="sidebar"):
-                self.dropdown = Select(
-                    options=self.model_dropdown,
-                    value=self.model_dropdown[0][1],
+                self.model_dropdown = Select(
+                    options=self.model_dropdown_content,
+                    value=self.model_dropdown_content[0][1],
                     prompt="Select a model...",
-                    id="dropdown",
+                    id="model-dropdown",
                 )
-                yield self.dropdown
+                yield self.model_dropdown
                 # TODO: Create system prompt input option
                 # TODO: Enable/Disable Agents (tools)
                 #       yield Button("Agents", id="agents-button")
@@ -93,19 +93,43 @@ class AIChatApp(App):
         # Footer showing keybindings (q or Esc to quit)
         yield Footer(id="app-footer")
 
+    #######################################################################
+    ##                              Events                               ##
+    #######################################################################
+    def on_select_changed(self, event: Select.Changed) -> None:
+        """
+        Handle the selection change event for the model dropdown.
+        """
+        #selected_value = event.value
+        self.chatbox.clear()
+        self.progress_bar.progress = 0
+
     async def on_button_pressed(self, event: Button.Pressed) -> None:
+        """
+        Handle the button press event for sending a message.
+        """
         if event.button.id == "send-button":
             await self.process_message()
 
     async def on_input_submitted(self, event: Input.Submitted) -> None:
+        """
+        Handle the input submission event for sending a message.
+        """
         await self.process_message()
+
+    def action_quit(self) -> None:
+        self.exit()
+
+    #######################################################################
+    ##                        AI Chat features                           ##
+    #######################################################################
 
     async def process_message(self) -> None:
         message = self.input.value.strip()
         if not message:
             return
 
-        selected_option = self.dropdown.value
+        selected_option = self.model_dropdown.value
         self.init_model(selected_option)
 
         self.chatbox.write_line("_" * (self.chatbox.size.width-4))
@@ -157,9 +181,6 @@ class AIChatApp(App):
             response = self._wrap_response(response)
 
         return response
-
-    def action_quit(self) -> None:
-        self.exit()
 
 
 if __name__ == "__main__":

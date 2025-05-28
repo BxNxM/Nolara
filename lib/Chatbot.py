@@ -8,7 +8,8 @@ class ChatOllama:
         self.model_name = model_name
         self.stream = stream
         self.tools = tools if isinstance(tools, list) else []
-        self.messages = [{"role": "system", "content": "You are a helpful assistant."}]
+        self.system_prompt = "Be helpful, informative, and comprehensive assistant."
+        self.messages = [{"role": "system", "content": self.system_prompt}]
 
     def add_assistant_message(self, message):
         assistant = {"role": "assistant", "content": message}
@@ -17,6 +18,9 @@ class ChatOllama:
     def add_user_message(self, message):
         user = {"role": "user", "content": message}
         self.messages.append(user)
+
+    def clear_messages(self):
+        self.messages = [{"role": "system", "content": self.system_prompt}]
 
     def chat(self, query):
         response = None
