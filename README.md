@@ -17,12 +17,17 @@ https://ollama.com
 Follow these steps to create a virtual environment using `virtualenv`, install dependencies from `requirements.txt`, and activate the environment.
 
 ```bash
-pip install virtualenv
-virtualenv venv
+# Create
+python3 -m venv .venv
 
-source venv/bin/activate
+# Activate
+source .venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
 ```
+
+> This command you will need to activate the virtual environment: `source .venv/bin/activate`
 
 
 ### 1.3. Install models

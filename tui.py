@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 
+# Textual is a Python library for building rich, interactive terminal applications.
 # https://textual.textualize.io/widget_gallery/
-
 from textual.app import App, ComposeResult
 from textual.containers import Vertical, Horizontal
 from textual.widgets import Input, Button, Log, Select, Static, ProgressBar, Footer
+
+# Additional libraries
 import asyncio
 import textwrap
 import time
+import re
 
 # LLM libraries
 from lib import Models
@@ -59,6 +62,7 @@ class AIChatApp(App):
                     id="dropdown",
                 )
                 yield self.dropdown
+                #yield Button("Agents", id="agents-button")
 
             # Chat area
             with Vertical(id="chat-area"):
@@ -104,7 +108,7 @@ class AIChatApp(App):
         self.timer_display.update(f"⏱️  Time taken: {duration:.2f}s")
 
         if isinstance(response, list):
-            self.chatbox.write_line(f"{selected_option}:")
+            self.chatbox.write_line(f"Assistant {selected_option}:")
             self.chatbox.write_lines(response)
         else:
             self.chatbox.write_line(f"{selected_option}: {response}")
@@ -122,12 +126,12 @@ class AIChatApp(App):
 
     def _wrap_response(self, response):
         box_width = self.chatbox.size.width -4
-        response_lines = response.split('\n')
+        response_lines = re.split(r'\n| \* ', response)
         wrapped_response = []
         for line in response_lines:
             if len(line) > box_width:
                 # Wrap the response text to fit inside the Log widget width
-                wrapped_response += textwrap.wrap(response, width=box_width)
+                wrapped_response += textwrap.wrap(line, width=box_width)
             else:
                 wrapped_response.append(line)
         return wrapped_response
