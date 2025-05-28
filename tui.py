@@ -15,6 +15,7 @@ import re
 # LLM libraries
 from lib import Models
 from lib import Chatbot
+#from lib import Agents
 
 
 def load_css():
@@ -40,12 +41,19 @@ class AIChatApp(App):
         self.chatbox:Log|None = None
         self.input:Input|None = None
         self.dropdown:Select|None = None
+        self.agents_enabled = False
         super().__init__()
 
     def init_model(self, model_name):
         if self.chatbot:
-            if self.chatbot.model_name == model_name:
+            if self.chatbot.model_name == model_name:                   # Handle Agent switch
                 return
+        if self.agents_enabled:
+            # TODO: Create Agent model
+            #   self.chatbot = ...
+            self.chatbot = Chatbot.ChatOllama(model_name)               # TODO: Replace with Agent creation
+            return
+        # Create chat model
         self.chatbot = Chatbot.ChatOllama(model_name)
 
     def compose(self) -> ComposeResult:
@@ -62,7 +70,9 @@ class AIChatApp(App):
                     id="dropdown",
                 )
                 yield self.dropdown
-                #yield Button("Agents", id="agents-button")
+                # TODO: Create system prompt input option
+                # TODO: Enable/Disable Agents (tools)
+                #       yield Button("Agents", id="agents-button")
 
             # Chat area
             with Vertical(id="chat-area"):
