@@ -20,7 +20,7 @@ def load_css():
     return textual_css
 
 
-class EchoChatApp(App):
+class AIChatApp(App):
     BINDINGS = [
         ("q", "quit", "Quit"),
         ("escape", "quit", "Quit"),
@@ -28,13 +28,16 @@ class EchoChatApp(App):
     CSS = load_css()
 
     def __init__(self):
-        super().__init__()
-        self.chatbot = None
+        self.chatbot:Chatbot.ChatOllama|None = None
         self.model_dropdown = Models.get_chat_models_dropdown()
-        self.progress = ProgressBar(total=100, id="progress-bar")
+        # Initialize global textual.widgets widgets
+        self.progress_bar = ProgressBar(total=100, id="progress-bar")
         self.timer_display = Static("⏱️  Time taken: 0s", id="timer-display")
-        self.dropdown = None
-        self.chatbox = None
+        # Initialize global parameters for textual.widgets
+        self.chatbox:Log|None = None
+        self.input:Input|None = None
+        self.dropdown:Select|None = None
+        super().__init__()
 
     def init_model(self, model_name):
         if self.chatbot:
@@ -63,23 +66,22 @@ class EchoChatApp(App):
                 yield self.chatbox
 
                 with Horizontal(id="progress-line"):
-                    yield self.progress
+                    yield self.progress_bar
                     yield self.timer_display
 
                 with Horizontal(id="input_bar"):
                     self.input = Input(placeholder="Type a message...", id="input")
                     yield self.input
-                    yield Button("Send", id="send")
-                    yield Button("Quit", id="quit-button")
+                    yield Button("Send", id="send-button")
+                    # TODO Speaker button (Speak)
+                    # TODO Microphone button (Listen)
 
         # Footer showing keybindings (q or Esc to quit)
         yield Footer(id="app-footer")
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "send":
+        if event.button.id == "send-button":
             await self.process_message()
-        elif event.button.id == "quit-button":
-            self.exit()
 
     async def on_input_submitted(self, event: Input.Submitted) -> None:
         await self.process_message()
@@ -93,9 +95,11 @@ class EchoChatApp(App):
         self.init_model(selected_option)
 
         self.chatbox.write_line("_" * (self.chatbox.size.width-4))
+        await self.update_progress(10)
         self.chatbox.write_line(f"\nYou: {message}")
         start_time = time.time()
         response = self._chat_model_process(message)
+        await self.update_progress(80)
         duration = time.time() - start_time
         self.timer_display.update(f"⏱️  Time taken: {duration:.2f}s")
 
@@ -105,12 +109,16 @@ class EchoChatApp(App):
         else:
             self.chatbox.write_line(f"{selected_option}: {response}")
 
-        # Animate progress bar
-        self.progress.progress = 100
-        await asyncio.sleep(0.3)
-        self.progress.progress = 0
+        # Animate progress bar - dummy
+        await self.update_progress(100)
+        await asyncio.sleep(0.1)
+        #self.progress_bar.progress = 0
 
         self.input.value = ""
+
+    async def update_progress(self, value):
+        self.progress_bar.progress = value
+        await asyncio.sleep(0.01)
 
     def _wrap_response(self, response):
         box_width = self.chatbox.size.width -4
@@ -125,13 +133,11 @@ class EchoChatApp(App):
         return wrapped_response
 
     def _chat_model_process(self, query, wrap=True):
-        self.progress.progress = 100
         if self.chatbot:
             state, response = self.chatbot.chat(query)
             response = response.message.content
         else:
             response = "No chatbot initialized"
-        self.progress.progress = 0
 
         if wrap:
             response = self._wrap_response(response)
@@ -143,4 +149,4 @@ class EchoChatApp(App):
 
 
 if __name__ == "__main__":
-    EchoChatApp().run()
+    AIChatApp().run()

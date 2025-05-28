@@ -37,10 +37,6 @@ Input, Button {
     height: auto;
 }
 
-#quit-button {
-    margin-left: 1;
-}
-
 #app-footer {
     background: black;
     color: white;
@@ -52,4 +48,8 @@ Input, Button {
     margin: 0;
     align: center middle;
     layout: horizontal;
+}
+
+#send-button {
+    dock: right;
 }
