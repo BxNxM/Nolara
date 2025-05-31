@@ -11,19 +11,34 @@ import asyncio
 import textwrap
 import time
 import re
+import os
 
-# LLM libraries
-from lib import Models
-from lib import Chatbot
-from lib import Agents
-from lib import Prompts
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+TCSS_PATH = os.path.join(SCRIPT_DIR, "textual.tcss")
+
+# IMPORT LLM LIBRARIES
 try:
-    from lib import Audio
+    from .lib import Models
+    from .lib import Chatbot
+    from .lib import Agents
+    from .lib import Prompts
 except ImportError:
-    Audio = None
+    from lib import Models
+    from lib import Chatbot
+    from lib import Agents
+    from lib import Prompts
+
+# IMPORT AUDIO LIBRARY IF AVAILABLE
+try:
+    from .lib import Audio
+except ImportError:
+    try:
+        from lib import Audio
+    except ImportError:
+        Audio = None
 
 def load_css():
-    with open("./textual.tcss", "r") as f:
+    with open(TCSS_PATH, "r") as f:
         textual_css = f.read()
     return textual_css
 

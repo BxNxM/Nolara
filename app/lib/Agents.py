@@ -1,9 +1,9 @@
 try:
     from .Chatbot import ChatOllama
-    from .Tools import add_two_numbers, set_color
+    from .Tools import generate_tools
 except ImportError:
     from Chatbot import ChatOllama
-    from Tools import add_two_numbers, set_color
+    from Tools import generate_tools
 import re
 
 
@@ -40,13 +40,8 @@ class Agent(ChatOllama):
         return _response + "\n" + _tool_result
 
 
-FUNCTION_TOOLS_MAPPER  = {
-  'add_two_numbers': add_two_numbers,
-  'set_color': set_color
-}
-
 def craft_agent_proto1(model_name='qwen3:14b'):
-    _agent = Agent(model_name, tools_dict=FUNCTION_TOOLS_MAPPER)
+    _agent = Agent(model_name, tools_dict=generate_tools())
     return _agent
 
 if __name__ == "__main__":

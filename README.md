@@ -17,7 +17,7 @@ https://ollama.com
 Follow these steps to create a virtual environment using `virtualenv`, install dependencies from `requirements.txt`, and activate the environment.
 
 ```bash
-cd Nolara/app/
+cd Nolara/
 
 # Create
 python3 -m venv .venv
@@ -26,10 +26,10 @@ python3 -m venv .venv
 source .venv/bin/activate
 
 # Install base dependencies
-pip install -r requirements-base.txt
+pip install -r ./app/requirements/requirements-base.txt
 
 # Install Audio dependencies (optional)
-pip install -r requirements-audio.txt
+pip install -r ./app/requirements/requirements-audio.txt
 ```
 
 
@@ -43,7 +43,7 @@ pip install -r requirements-audio.txt
 ```bash
 ollama pull gemma2:latest
 ollama pull gemma3:4b
-ollama pull qwen3:8b
+ollama pull qwen3:4b
 ```
 
 **Medium profile**
@@ -51,7 +51,7 @@ ollama pull qwen3:8b
 ```bash
 ollama pull gemma2:latest
 ollama pull gemma3:12b
-ollama pull qwen3:14b
+ollama pull qwen3:8b
 ```
 
 
@@ -81,11 +81,53 @@ qwen3:14b                  7d7da67570e2    9.3 GB
 ## 2. Start the Nolara chat interface
 
 ```bash
-cd Nolara/app
+cd Nolara
 source .venv/bin/activate
-./tui.py
+./main.py
 ```
 
+![NolaraTUI2](./media/NolaraTUI2.png?raw=true)
+
+## Customzation
+
+### Project structure
+
+```bash
+(.venv) ➜  Nolara git:(main) ✗ ll
+total 40
+-rw-r--r--  1 usr  staff    11K May 25 20:26 LICENSE
+-rw-r--r--@ 1 usr  staff   2.3K May 31 18:55 README.md
+drwxr-xr-x  9 usr  staff   288B May 31 18:48 app
+-rwxr-xr-x@ 1 usr  staff    68B May 31 18:44 main.py
+drwxr-xr-x  5 usr  staff   160B May 31 18:57 media
+lrwxr-xr-x  1 usr  staff    16B May 31 18:48 requirements -> app/requirements
+lrwxr-xr-x  1 usr  staff    22B May 31 18:43 system_prompts -> app/lib/system_prompts
+lrwxr-xr-x  1 usr  staff    14B May 31 18:43 tools -> app/lib/tools/
+```
+
+### 💬 system_prompts
+
+Add **custom system prompts** under
+
+```bash
+(.venv) ➜  Nolara git:(main) ✗ ll system_prompts/
+total 16
+-rw-r--r--@ 1 usr  staff    52B May 31 16:39 basic.txt
+-rw-r--r--@ 1 usr  staff    68B May 31 12:52 short.txt
+```
+
+### 🛠️ tools
+
+Add **custom tools** under
+
+```bash
+(.venv) ➜  Nolara git:(main) ✗ ll tools/
+total 8
+-rw-r--r--@ 1 usr  staff   606B May 31 18:14 basic.py
+-rw-r--r--@ 1 usr  staff     0B May 31 18:34 websearch.py
+```
+
+---------------------------------------------------------------
 ---------------------------------------------------------------
 
 ## Additional models for Ollama Coding Buddy
