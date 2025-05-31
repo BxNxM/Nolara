@@ -94,4 +94,5 @@ def get_location_from_user() -> str:
                 return city
     except Exception as e:
         return f"Location detection failed: {e}"
+    return "Budapest"
 

@@ -1,11 +1,23 @@
 import os
 import json
+import shutil
 
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
-CONFIG_DIR = os.path.join(SCRIPT_DIR, "../config.json")
+DEFAULT_CONFIG_FILE = os.path.join(SCRIPT_DIR, "../configuration/default_config.json")
+USER_CONFIG_FILE = os.path.join(SCRIPT_DIR, "../configuration/usr_config.json")
+
+
+def _user_configration():
+    if not os.path.exists(USER_CONFIG_FILE):
+        shutil.copy(DEFAULT_CONFIG_FILE, USER_CONFIG_FILE)
+        print(f"Copied {DEFAULT_CONFIG_FILE} to {USER_CONFIG_FILE}")
+    else:
+        print(f"{USER_CONFIG_FILE} already exists")
+
 
 def load_config():
-    with open(CONFIG_DIR, 'r') as file:
+    _user_configration()
+    with open(USER_CONFIG_FILE, 'r') as file:
         config_data = json.load(file)
     return config_data
 

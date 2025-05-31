@@ -11,50 +11,26 @@ Nolara project base chat implementation
 """
 
 import ollama
+from openai import OpenAI
+
+try:
+    from . import ChatBase
+    from . import Config
+except ImportError:
+    import ChatBase
+    import Config
 
 # https://www.cohorte.co/blog/using-ollama-with-python-step-by-step-guide
 
-class ChatOllama:
+class ChatOllama(ChatBase.ChatBase):
 
     def __init__(self, model_name:str, tools:list|None=None, stream:bool=False):
+        super().__init__()
         self.model_name = model_name
         self.stream = stream
         self.tools = tools if isinstance(tools, list) else []
-        self._system_prompt = "Be helpful assistant."
-        self.messages = [{"role": "system", "content": self._system_prompt}]
 
-    def add_assistant_message(self, message):
-        """
-        Add an assistant message to the chat history.
-        """
-        assistant = {"role": "assistant", "content": message}
-        self.messages.append(assistant)
-
-    def add_user_message(self, message):
-        """
-        Add a user message to the chat history.
-        """
-        user = {"role": "user", "content": message}
-        self.messages.append(user)
-
-    def clear_messages(self):
-        """
-        Clear all messages in the chat history.
-        """
-        self.messages = [{"role": "system", "content": self._system_prompt}]
-
-    def system_prompt(self, prompt=None) -> str:
-        """
-        Getter and setter for the system prompt.
-        """
-        if prompt is None or prompt.strip() == self._system_prompt:
-            return self._system_prompt
-        else:
-            self._system_prompt = prompt.strip()
-            self.messages[0] = {"role": "system", "content": self._system_prompt}
-        return self._system_prompt
-
-    def ollama_chat(self, stream=False):
+    def run_model(self, stream=False):
         """
         The LLM wrapper function to handle the chat interaction.
         """
@@ -79,7 +55,7 @@ class ChatOllama:
         if self.stream:
             print(">Bot: ", end="", flush=True)
             full_response = ""
-            for chunk in self.ollama_chat(stream=True):
+            for chunk in self.run_model(stream=True):
                 content = chunk.get("message", {}).get("content", "")
                 print(content, end="", flush=True)
                 full_response += content
@@ -87,7 +63,7 @@ class ChatOllama:
             self.add_assistant_message(full_response)
             return True, {"message": {"content": full_response}}
         else:
-            response = self.ollama_chat(stream=False)
+            response = self.run_model(stream=False)
             answer = response.message.content
             print(">Bot:", answer)
             self.add_assistant_message(answer)
@@ -97,20 +73,64 @@ class ChatOllama:
     def human_output_parser(response):
         return response.message.content
 
-    def chat_loop(self):
-        # Continue the conversation:
-        while True:
-            try:
-                user_input = input(f"[{self.model_name}] Ask me something: ")
-            except KeyboardInterrupt:
-                break
-            if user_input.lower() in ['exit', 'quit', 'bye']:
-                break
-            state, response = self.chat(query=user_input)
-            if not state:
-                break
-        print("Bye!")
+
+class ChatOpenAI(ChatBase.ChatBase):
+    def __init__(self, model_name: str, tools: list | None = None, stream: bool = False):
+        super().__init__()
+        self.model_name = model_name
+        self.stream = stream
+        self.tools = tools if isinstance(tools, list) else []
+        openai_config = Config.get("remote").get("openai", None)
+        if openai_config is None:
+            raise ValueError("OpenAI configuration not found in config file.")
+        openai_api_key = openai_config.get("api_key", None)
+        if openai_api_key:
+            self.client = OpenAI(api_key=openai_api_key)
+        else:
+            raise ValueError("OpenAI API key not found.")
+
+    def run_model(self, stream=False):
+        kwargs = {
+            "model": self.model_name,
+            "messages": self.messages,
+            "stream": stream,
+        }
+        return self.client.chat.completions.create(**kwargs)
+
+    def chat(self, query: str):
+        if not query:
+            return False, None
+
+        self.add_user_message(query)
+
+        if self.stream:
+            print(">Bot: ", end="", flush=True)
+            full_response = ""
+            response = self.run_model(stream=True)
+            for chunk in response:
+                # chunk.choices[0].delta can have 'content'
+                delta = chunk.choices[0].delta
+                content = delta.get("content", "")
+                print(content, end="", flush=True)
+                full_response += content
+            print()
+            self.add_assistant_message(full_response)
+            return True, {"message": {"content": full_response}}
+        else:
+            response = self.run_model(stream=False)
+            answer = response.choices[0].message.content
+            print(">Bot:", answer)
+            self.add_assistant_message(answer)
+            return True, response
+
+    @staticmethod
+    def human_output_parser(response):
+        return response.choices[0].message.content
+
 
 if __name__ == "__main__":
     chatbot = ChatOllama(model_name='gemma2:latest', stream=False)
     chatbot.chat_loop()
+
+    #chatbot = ChatOpenAI(model_name='gpt-4', stream=False)
+    #chatbot.chat_loop()
