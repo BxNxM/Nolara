@@ -53,3 +53,13 @@ Input, Button {
 #send-button {
     dock: right;
 }
+
+#speak-button {
+    dock:right;
+}
+
+#model-feature-label {
+    margin: 0 1;           /* 1 line vertical margin, 0 horizontal */
+    width: auto;           /* or a fixed width like 30 */
+    height: auto;
+}

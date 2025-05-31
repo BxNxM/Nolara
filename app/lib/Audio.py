@@ -3,6 +3,8 @@ from gtts import gTTS
 import os
 import platform
 
+AUDIO_OUT_CACHE_FILE = ".speach_audio.mp3"
+
 
 def play_audio_mac(file_path):
     """Plays an audio file on macOS using osascript."""
@@ -72,9 +74,8 @@ def text_to_speech(text, language="en-US"):
     """
     # Text-to-Speech
     tts = gTTS(text=text, lang=gtts_lang(language), slow=False)
-    tts.save("echoed_text.mp3")
-
-    play_audio_cross_platform("echoed_text.mp3")  # Use cross-platform playback
+    tts.save(AUDIO_OUT_CACHE_FILE)
+    play_audio_cross_platform(AUDIO_OUT_CACHE_FILE)  # Use cross-platform playback
 
 
 def echo_speech(language="en-US"):

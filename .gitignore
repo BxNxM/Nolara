@@ -1,4 +1,4 @@
-.idea/
-*/__pycache__/
-*.mp3
+**.idea/
+**/__pycache__/
+**.mp3
 **.DS_Store

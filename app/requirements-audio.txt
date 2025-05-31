@@ -1,7 +1,3 @@
-
-# Get ollama python client
-ollama
-
 # Audio library - TTS - STT
 SpeechRecognition
 # macOS: brew install portaudio
@@ -13,5 +9,3 @@ gTTS
 vosk
 sounddevice
 
-# GUI
-textual

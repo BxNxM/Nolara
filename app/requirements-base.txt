@@ -1,0 +1,7 @@
+
+# OLLAMA PYTHON CLIENT - LLMs
+ollama
+
+# TUI INTERFACE
+textual
+

@@ -1,4 +1,6 @@
-
+"""
+Nolara project base model handling
+"""
 # https://github.com/ollama/ollama-python
 
 import ollama

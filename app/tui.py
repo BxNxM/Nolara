@@ -15,8 +15,11 @@ import re
 # LLM libraries
 from lib import Models
 from lib import Chatbot
-#from lib import Agents
-
+from lib import Agents
+try:
+    from lib import Audio
+except ImportError:
+    Audio = None
 
 def load_css():
     with open("./textual.tcss", "r") as f:
@@ -42,16 +45,19 @@ class AIChatApp(App):
         self.input:Input|None = None
         self.model_dropdown:Select|None = None
         self.agents_enabled = False
+        self.last_response:str = ""
         super().__init__()
 
     def init_model(self, model_name):
         if self.chatbot:
             if self.chatbot.model_name == model_name:                   # Handle Agent switch
                 return
+        self.agents_enabled = Models.show_model(model_name)["tool"]
         if self.agents_enabled:
             # TODO: Create Agent model
             #   self.chatbot = ...
-            self.chatbot = Chatbot.ChatOllama(model_name)               # TODO: Replace with Agent creation
+            #self.chatbot = Chatbot.ChatOllama(model_name)               # TODO: Replace with Agent creation
+            self.chatbot = Agents.craft_agent_proto1(model_name)
             return
         # Create chat model
         self.chatbot = Chatbot.ChatOllama(model_name)
@@ -70,9 +76,8 @@ class AIChatApp(App):
                     id="model-dropdown",
                 )
                 yield self.model_dropdown
+                yield Static("Model Features", id="model-feature-label", markup=True)
                 # TODO: Create system prompt input option
-                # TODO: Enable/Disable Agents (tools)
-                #       yield Button("Agents", id="agents-button")
 
             # Chat area
             with Vertical(id="chat-area"):
@@ -87,7 +92,8 @@ class AIChatApp(App):
                     self.input = Input(placeholder="Type a message...", id="input")
                     yield self.input
                     yield Button("Send", id="send-button")
-                    # TODO Speaker button (Speak)
+                    if Audio is not None:
+                        yield Button("Speak", id="speak-button")
                     # TODO Microphone button (Listen)
 
         # Footer showing keybindings (q or Esc to quit)
@@ -100,16 +106,23 @@ class AIChatApp(App):
         """
         Handle the selection change event for the model dropdown.
         """
-        #selected_value = event.value
+        model_name = event.value
         self.chatbox.clear()
         self.progress_bar.progress = 0
+        label_widget = self.query_one("#model-feature-label", Static)
+        if Models.show_model(model_name)["tool"]:
+            label_widget.update("[b blue]Agentic[/]")
+        else:
+            label_widget.update("[b green]Chat[/]")
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         """
-        Handle the button press event for sending a message.
+        Handle the button press event for sending a message, etc.
         """
         if event.button.id == "send-button":
             await self.process_message()
+        if event.button.id == "speak-button":
+            await self.speach_to_text()
 
     async def on_input_submitted(self, event: Input.Submitted) -> None:
         """
@@ -123,6 +136,12 @@ class AIChatApp(App):
     #######################################################################
     ##                        AI Chat features                           ##
     #######################################################################
+    async def speach_to_text(self, language="en-US"):
+        if Audio is None:
+            return
+        self.chatbox.write_line("Speak...")
+        if len(self.last_response) > 0:
+            Audio.text_to_speech(self.last_response, language=language)
 
     async def process_message(self) -> None:
         message = self.input.value.strip()
@@ -173,10 +192,10 @@ class AIChatApp(App):
     def _chat_model_process(self, query, wrap=True):
         if self.chatbot:
             state, response = self.chatbot.chat(query)
-            response = response.message.content
+            response = self.chatbot.human_output_parser(response)
         else:
             response = "No chatbot initialized"
-
+        self.last_response = response
         if wrap:
             response = self._wrap_response(response)
 

@@ -17,15 +17,21 @@ https://ollama.com
 Follow these steps to create a virtual environment using `virtualenv`, install dependencies from `requirements.txt`, and activate the environment.
 
 ```bash
+cd Nolara/app/
+
 # Create
 python3 -m venv .venv
 
 # Activate
 source .venv/bin/activate
 
-# Install dependencies
-pip install -r requirements.txt
+# Install base dependencies
+pip install -r requirements-base.txt
+
+# Install Audio dependencies (optional)
+pip install -r requirements-audio.txt
 ```
+
 
 > This command you will need to activate the virtual environment: `source .venv/bin/activate`
 
@@ -75,7 +81,7 @@ qwen3:14b                  7d7da67570e2    9.3 GB
 ## 2. Start the Nolara chat interface
 
 ```bash
-cd Nolara
+cd Nolara/app
 source .venv/bin/activate
 ./tui.py
 ```
