@@ -3,6 +3,12 @@ import importlib.util
 import inspect
 import ast
 
+try:
+    from . import Config
+except ImportError:
+    import Config
+ENABLED_TOOLS = Config.get("tools")
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 TOOLS_DIR = os.path.join(SCRIPT_DIR, "tools")
 FUNCTION_TOOLS_MAPPER: dict = {}
@@ -31,6 +37,16 @@ def import_module_from_file(module_filename: str):
     return module
 
 
+def is_tool_enabled(tool_name: str) -> bool:
+    if ENABLED_TOOLS is None:
+        return True  # If no tools are specified, assume all are enabled.
+    if ENABLED_TOOLS and (ENABLED_TOOLS[0] == "*" or ENABLED_TOOLS[0].lower() == "all"):
+        if len(ENABLED_TOOLS) > 1 and f"!{tool_name}" in ENABLED_TOOLS:
+            return False  # If a tool is explicitly disabled, return False.
+        return True  # If all tools are enabled, check individual tool names.
+    return tool_name in ENABLED_TOOLS
+
+
 # Step 4: Build the FUNCTION_TOOLS_MAPPER dict automatically
 def generate_tools() -> dict[str, callable]:
     """
@@ -41,6 +57,8 @@ def generate_tools() -> dict[str, callable]:
     FUNCTION_TOOLS_MAPPER.clear()
 
     for filename in list_py_files():
+        if not is_tool_enabled(filename):
+            continue
         mod = import_module_from_file(filename)
         # Inspect the module for top-level functions
         for name, obj in inspect.getmembers(mod, inspect.isfunction):

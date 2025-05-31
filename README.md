@@ -127,6 +127,27 @@ total 8
 -rw-r--r--@ 1 usr  staff     0B May 31 18:34 websearch.py
 ```
 
+## Configuration
+
+```bash
+cd Nolara
+cat Nolara/config.json
+```
+
+```json
+{
+  "tools": ["*", "!micros_tools.py"],
+  "language":"en-US",
+  "models": ["qwen3:4b", "llama3.2:1b", "gemma2:latest"]
+}
+```
+
+> **tools**: Select tools for agentic models (Nolara/tools/*.py), `*` or `all` means select all tools. Disable tool with `!`. You can add modules individually as well.
+
+> **language**: Under development
+
+> **models**: required models with autoinstall (ollama pull)
+
 ---------------------------------------------------------------
 ---------------------------------------------------------------
 

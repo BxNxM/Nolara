@@ -17,6 +17,9 @@ class Agent(ChatOllama):
         return list(self.tools_mapping.values())
 
     def chat(self, query):
+        """
+        Chat with the model and handle tool responses.
+        """
         response = super().chat(query)[1]
         result = {}
         # Handle the Tool Response
@@ -43,6 +46,7 @@ class Agent(ChatOllama):
 def craft_agent_proto1(model_name='qwen3:14b'):
     _agent = Agent(model_name, tools_dict=generate_tools())
     return _agent
+
 
 if __name__ == "__main__":
     agent = craft_agent_proto1()

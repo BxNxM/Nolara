@@ -1,7 +1,13 @@
 import speech_recognition as sr
 from gtts import gTTS
+from gtts.lang import tts_langs
 import os
 import platform
+
+try:
+    from . import Config
+except ImportError:
+    import Config
 
 AUDIO_OUT_CACHE_FILE = ".speach_audio.mp3"
 
@@ -68,10 +74,12 @@ def speech_to_text(language):
     return text
 
 
-def text_to_speech(text, language="en-US"):
+def text_to_speech(text, language=None):
     """
     Converts text to speech using Google's Text-to-Speech API.
     """
+    if language is None:
+        language = Config.get("language") or "en-US"  # Default to English
     # Text-to-Speech
     remove_chars = ["*"]
     for char in remove_chars:
@@ -81,16 +89,28 @@ def text_to_speech(text, language="en-US"):
     play_audio_cross_platform(AUDIO_OUT_CACHE_FILE)  # Use cross-platform playback
 
 
-def echo_speech(language="en-US"):
+def echo_speech(language=None):
     """
     Listens for speech input, echoes it back via TTS.
     """
+    if language is None:
+        language = Config.get("language") or "en-US"  # Default to English
     text = speech_to_text(language)
     if text:
         text_to_speech(text, language)
 
 
+def list_languages():
+    print("[TTS] Text-to-speech languages (gTTS):")
+    languages = tts_langs()
+    for code, name in languages.items():
+        print(f"{code}: {name}")
+    print("[STT] Voice recognition languages (speech_recognition):\n\thttps://cloud.google.com/speech-to-text/docs/speech-to-text-supported-languages")
+
+
 if __name__ == "__main__":
-    text_to_speech("Nolara")
+    list_languages()
+    text_to_speech("Nollara")
+
     #echo_speech(language="en-US")
     #echo_speech(language="hu-HU")

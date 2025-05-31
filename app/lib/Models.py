@@ -6,6 +6,11 @@ Nolara project base model handling
 import ollama
 from pprint import pprint
 
+try:
+    from . import Config
+except ImportError:
+    import Config
+
 
 def list_models():
     """
@@ -22,7 +27,7 @@ def show_model(model_name):
     """
     details = ollama.show(model_name).modelfile
     model_details = {"modelfile": details}
-    if "<tool_call>" in details:
+    if "<tool_call>" in details or "tool call" in details:
         model_details["tool"] = True
     else:
         model_details["tool"] = False
@@ -64,8 +69,23 @@ def validate_model(model) -> str:
 
 def pull_model(model):
     out = ollama.pull(model)
-    print(f"Model pull: {out}")
+    print(f"Model pulled successfully.: {out}")
     return model
+
+
+def models_requirement():
+    """
+    Check if any models require pulling
+    """
+    requirements = Config.get('models') or []
+    requirements_cnt = len(requirements)
+    models = [m.model for m in list_models()]
+    for i, requirement in enumerate(requirements):
+        if requirement not in models:
+            print(f"[{i+1}/{requirements_cnt}] Pull: {requirement} (Please wait...)")
+            pull_model(requirement)
+        else:
+            print(f"[{i+1}/{requirements_cnt}] Model {requirement} already available.")
 
 
 if __name__ == "__main__":
@@ -77,3 +97,6 @@ if __name__ == "__main__":
 
     pprint(get_models_dropdown())
     pprint(get_chat_models_dropdown())
+
+    models_requirement()
+    print(show_model("llama3.2:1b"))

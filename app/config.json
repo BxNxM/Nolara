@@ -1,0 +1,5 @@
+{
+  "tools": ["*", "!micros_tools.py"],
+  "language":"en-US",
+  "models": ["qwen3:4b", "llama3.2:1b", "gemma2:latest"]
+}
