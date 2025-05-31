@@ -16,6 +16,7 @@ import re
 from lib import Models
 from lib import Chatbot
 from lib import Agents
+from lib import Prompts
 try:
     from lib import Audio
 except ImportError:
@@ -44,9 +45,16 @@ class AIChatApp(App):
         self.chatbox:Log|None = None
         self.input:Input|None = None
         self.model_dropdown:Select|None = None
+        self.system_prompt_input:Input|None = None
+        self.prompt_dropdown:Select|None = None
         self.agents_enabled = False
         self.last_response:str = ""
+        self.init_model(self._get_default_model())      # Preload model
         super().__init__()
+
+    @staticmethod
+    def _get_default_model():
+        return Models.get_chat_models_dropdown()[0][1]
 
     def init_model(self, model_name):
         if self.chatbot:
@@ -54,9 +62,7 @@ class AIChatApp(App):
                 return
         self.agents_enabled = Models.show_model(model_name)["tool"]
         if self.agents_enabled:
-            # TODO: Create Agent model
-            #   self.chatbot = ...
-            #self.chatbot = Chatbot.ChatOllama(model_name)               # TODO: Replace with Agent creation
+            # Craft agent chat model
             self.chatbot = Agents.craft_agent_proto1(model_name)
             return
         # Create chat model
@@ -67,19 +73,32 @@ class AIChatApp(App):
         yield Static("[b green]Nolara[/]", id="title-bar", markup=True)
 
         with Horizontal(id="main-layout"):
-            # Sidebar with dropdown
+            ############################# SIDEBAR with dropdowns #############################
             with Vertical(id="sidebar"):
                 self.model_dropdown = Select(
                     options=self.model_dropdown_content,
-                    value=self.model_dropdown_content[0][1],
+                    value=self._get_default_model(),
                     prompt="Select a model...",
                     id="model-dropdown",
                 )
                 yield self.model_dropdown
+                # Label for model features section (Chat/Agentic)
                 yield Static("Model Features", id="model-feature-label", markup=True)
-                # TODO: Create system prompt input option
+                # Bottom section with dropdown + input stacked
+                with Vertical(id="bottom-controls"):
+                    # Prompt input dropdown for system prompts
+                    self.prompt_dropdown = Select(
+                        options=Prompts.system_prompts_dropdown(),
+                        prompt="Select system prompt...",
+                        id="prompt-dropdown")
+                    yield self.prompt_dropdown
+                    # New editable input field for system prompts
+                    self.system_prompt_input = Input(
+                        placeholder=self.chatbot.system_prompt(),
+                        id="system-prompt-input")
+                    yield self.system_prompt_input
 
-            # Chat area
+            ######################### CHAT area with chatbox and buttons #########################
             with Vertical(id="chat-area"):
                 self.chatbox = Log(id="chat")
                 yield self.chatbox
@@ -106,14 +125,21 @@ class AIChatApp(App):
         """
         Handle the selection change event for the model dropdown.
         """
-        model_name = event.value
-        self.chatbox.clear()
-        self.progress_bar.progress = 0
-        label_widget = self.query_one("#model-feature-label", Static)
-        if Models.show_model(model_name)["tool"]:
-            label_widget.update("[b blue]Agentic[/]")
-        else:
-            label_widget.update("[b green]Chat[/]")
+        if event.select.id == "model-dropdown":
+            # MODEL SELECTION
+            model_name = event.value
+            self.chatbox.clear()
+            self.progress_bar.progress = 0
+            label_widget = self.query_one("#model-feature-label", Static)
+            if Models.show_model(model_name)["tool"]:
+                label_widget.update("[b blue]Agentic[/]")
+            else:
+                label_widget.update("[b green]Chat[/]")
+        if event.select.id == "prompt-dropdown":
+            # PROMPT SELECTION
+            selected_prompt = event.value
+            self.system_prompt_input.value = selected_prompt
+            self.chatbot.system_prompt(selected_prompt)
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         """
@@ -128,7 +154,10 @@ class AIChatApp(App):
         """
         Handle the input submission event for sending a message.
         """
-        await self.process_message()
+        if event.input.id == "input":
+            await self.process_message()
+        if event.input.id == "system-prompt-input":
+            self.chatbot.system_prompt(event.value)
 
     def action_quit(self) -> None:
         self.exit()

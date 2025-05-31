@@ -73,6 +73,9 @@ def text_to_speech(text, language="en-US"):
     Converts text to speech using Google's Text-to-Speech API.
     """
     # Text-to-Speech
+    remove_chars = ["*"]
+    for char in remove_chars:
+        text = text.replace(char, "")
     tts = gTTS(text=text, lang=gtts_lang(language), slow=False)
     tts.save(AUDIO_OUT_CACHE_FILE)
     play_audio_cross_platform(AUDIO_OUT_CACHE_FILE)  # Use cross-platform playback

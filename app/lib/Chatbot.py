@@ -20,8 +20,8 @@ class ChatOllama:
         self.model_name = model_name
         self.stream = stream
         self.tools = tools if isinstance(tools, list) else []
-        self.system_prompt = "Be helpful, informative, and comprehensive assistant."
-        self.messages = [{"role": "system", "content": self.system_prompt}]
+        self._system_prompt = "Be helpful assistant."
+        self.messages = [{"role": "system", "content": self._system_prompt}]
 
     def add_assistant_message(self, message):
         """
@@ -41,18 +41,18 @@ class ChatOllama:
         """
         Clear all messages in the chat history.
         """
-        self.messages = [{"role": "system", "content": self.system_prompt}]
+        self.messages = [{"role": "system", "content": self._system_prompt}]
 
     def system_prompt(self, prompt=None) -> str:
         """
         Getter and setter for the system prompt.
         """
-        if prompt is None:
-            return self.system_prompt
+        if prompt is None or prompt.strip() == self._system_prompt:
+            return self._system_prompt
         else:
-            self.system_prompt = prompt
-            self.messages[0] = {"role": "system", "content": self.system_prompt}
-        return self.system_prompt
+            self._system_prompt = prompt.strip()
+            self.messages[0] = {"role": "system", "content": self._system_prompt}
+        return self._system_prompt
 
     def ollama_chat(self, stream=False):
         """
