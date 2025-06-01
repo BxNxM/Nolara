@@ -175,7 +175,8 @@ class AIChatApp(App):
             self.chatbot.system_prompt(event.value)
 
     def action_quit(self) -> None:
-        Audio.delete_audio_cache()
+        if Audio is not None:
+            Audio.delete_audio_cache()
         self.exit()
 
     #######################################################################

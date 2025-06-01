@@ -1,9 +1,10 @@
 # OLLAMA PYTHON CLIENT - LOCAL LLMs
 ollama
-
 # OpenAI PYTHON CLIENT - REMOTE LLMS
 openai
 
+# TOOLS/AGENT REQUIREMENTS
+requests
+
 # TUI INTERFACE
 textual
-
