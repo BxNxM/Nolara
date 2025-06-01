@@ -37,8 +37,9 @@ class Agent(ChatOllama):
     def human_output_parser(response):
         _response = ChatOllama.human_output_parser(response["response"])
         # Remove everything between <think> and </think>, including the tags
+        _is_thinking = "<think>" in _response.lower()
         _response = re.sub(r"<think>.*?</think>", "", _response, flags=re.DOTALL)
-        _response = f"Thinking...\n{_response}"
+        _response = f"{'Thinking...\n' if _is_thinking else ''}{_response}"
         _tool_result = str(response["tool_result"])
         return _response + "\n" + _tool_result
 
