@@ -175,17 +175,18 @@ class AIChatApp(App):
             self.chatbot.system_prompt(event.value)
 
     def action_quit(self) -> None:
+        Audio.delete_audio_cache()
         self.exit()
 
     #######################################################################
     ##                        AI Chat features                           ##
     #######################################################################
-    async def speach_to_text(self, language="en-US"):
+    async def speach_to_text(self):
         if Audio is None:
             return
         self.chatbox.write_line("Speak...")
         if len(self.last_response) > 0:
-            Audio.text_to_speech(self.last_response, language=language)
+            Audio.text_to_speech(self.last_response)
 
     async def process_message(self) -> None:
         message = self.input.value.strip()

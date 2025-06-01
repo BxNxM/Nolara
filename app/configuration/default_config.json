@@ -1,5 +1,6 @@
 {
   "tools": ["*", "!micros_tools.py"],
+  // Supported language: en-US, hu-HU
   "language":"en-US",
   "models": ["qwen3:4b", "llama3.2:1b", "gemma2:latest"],
   "remote": {"openai":  {

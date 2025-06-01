@@ -3,13 +3,19 @@ from gtts import gTTS
 from gtts.lang import tts_langs
 import os
 import platform
+import shutil
+
+SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
+AUDIO_CACHE_DIR = os.path.join(SCRIPT_DIR, "../.audio_cache")
+AUDIO_OUT_CACHE_FILE = os.path.join(AUDIO_CACHE_DIR, "speach_audio.mp3")
+# Check if the directory exists, and create it if it doesn't
+if not os.path.exists(AUDIO_CACHE_DIR):
+    os.makedirs(AUDIO_CACHE_DIR)
 
 try:
     from . import Config
 except ImportError:
     import Config
-
-AUDIO_OUT_CACHE_FILE = ".speach_audio.mp3"
 
 
 def play_audio_mac(file_path):
@@ -87,6 +93,13 @@ def text_to_speech(text, language=None):
     tts = gTTS(text=text, lang=gtts_lang(language), slow=False)
     tts.save(AUDIO_OUT_CACHE_FILE)
     play_audio_cross_platform(AUDIO_OUT_CACHE_FILE)  # Use cross-platform playback
+
+
+def delete_audio_cache():
+    if os.path.exists(AUDIO_CACHE_DIR):
+        shutil.rmtree(AUDIO_CACHE_DIR)
+        return True
+    return False
 
 
 def echo_speech(language=None):
