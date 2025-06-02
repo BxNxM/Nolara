@@ -41,22 +41,41 @@ class NolaraCore:
             if self.chatbot.model_name == model_name:                   # Handle Agent switch
                 return self.chatbot
 
-        self._tool_calls = Models.show_model(model_name)["tool"]
-        if self.is_agent_enabled():
-            # Craft agent chat model
-            self.chatbot = Agents.craft_agent_proto1(model_name)
-            return self.chatbot
-        # Create chat model
-        self.chatbot = Chatbot.ChatOllama(model_name)
+        if model_name.startswith(":"):
+            # remote model (workaround for OpenAI API)
+            _remote = model_name.split(":")
+            remote_vendor = _remote[1]
+            remote_model_name = _remote[2]
+            if remote_vendor == "openai":
+                self._tool_calls = False
+                self.chatbot = Chatbot.ChatOpenAI(remote_model_name)
+                return self.chatbot
+        else:
+            # local model
+            if self.is_agent_enabled(model_name):
+                # Craft agent chat model
+                self.chatbot = Agents.craft_agent_proto1(model_name)
+                return self.chatbot
+            # Create chat model
+            self.chatbot = Chatbot.ChatOllama(model_name)
         return self.chatbot
 
-    def is_agent_enabled(self) -> bool:
+    def _is_tools(self, model_name):
+        """
+        This method checks whether tool calls are available for the given.
+        """
+        if self.chatbot:
+            if self.chatbot.model_name == model_name:                   # Handle Agent switch
+                return self._tool_calls
+        self._tool_calls = Models.show_model(model_name)["tool"]
+        return self._tool_calls
+
+    def is_agent_enabled(self, model_name) -> bool:
         """
         This method checks whether agents are enabled in the configuration
         and if tool calls are available.
         """
-        is_agents_enabled = Config.get("agents")["enabled"]
-        return self._tool_calls and is_agents_enabled
+        return Config.get("agents")["enabled"] and self._is_tools(model_name)
 
     @staticmethod
     def _wrap_response(response, box_width):

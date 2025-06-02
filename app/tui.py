@@ -43,7 +43,7 @@ class AIChatApp(App, NolaraCore.NolaraCore):
     def __init__(self):
         NolaraCore.NolaraCore.__init__(self)
         # Initialize global variables for the app
-        self.model_dropdown_content = Models.get_chat_models_dropdown()
+        self.model_dropdown_content = Models.get_chat_models_dropdown() + Models.get_remote_models_dropdown()
         # Initialize global textual.widgets widgets
         self.progress_bar = ProgressBar(total=100, id="progress-bar")
         self.timer_display = Static("⏱️  Time taken: 0s", id="timer-display")
@@ -123,7 +123,7 @@ class AIChatApp(App, NolaraCore.NolaraCore):
             self.chatbox.clear()
             self.progress_bar.progress = 0
             label_widget = self.query_one("#model-feature-label", Static)
-            if self.is_agent_enabled():
+            if self.is_agent_enabled(model_name):
                 label_widget.update("[b blue]Agentic[/]")
             else:
                 label_widget.update("[b green]Chat[/]")
@@ -178,7 +178,7 @@ class AIChatApp(App, NolaraCore.NolaraCore):
         self.timer_display.update(f"⏱️  Time taken: {duration:.2f}s")
 
         if isinstance(response, list):
-            self.chatbox.write_line(f"Assistant {selected_option}:")
+            self.chatbox.write_line(f"Assistant {self.chatbot.model_name}:")
             self.chatbox.write_lines(response)
         else:
             self.chatbox.write_line(f"{selected_option}: {response}")

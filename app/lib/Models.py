@@ -12,6 +12,10 @@ except ImportError:
     import Config
 
 
+#############################################################
+#                     LOCAL MODEL HANDLING                  #
+#############################################################
+
 def list_models():
     """
     List local ollama models
@@ -25,12 +29,18 @@ def show_model(model_name):
     :return:
         {"modelfile": details, "tool": True/False}
     """
-    details = ollama.show(model_name).modelfile
-    model_details = {"modelfile": details}
-    if "<tool_call>" in details or "tool call" in details:
-        model_details["tool"] = True
-    else:
-        model_details["tool"] = False
+    model_details = {"modelfile": f"Remote model {model_name} (beta)", "tool": False}
+    if model_name.startswith(":"):
+        # Remote model indicator prefix (workaround for OpenAI API)
+        return model_details
+
+    if validate_model(model_name):
+        details = ollama.show(model_name).modelfile
+        model_details = {"modelfile": details}
+        if "<tool_call>" in details or "tool call" in details:
+            model_details["tool"] = True
+        else:
+            model_details["tool"] = False
     return model_details
 
 
@@ -73,9 +83,9 @@ def pull_model(model):
     return model
 
 
-def models_requirement():
+def models_requirement() -> None:
     """
-    Check if any models require pulling
+    Check local models requirements and pull if not available
     """
     requirements = Config.get('models') or []
     requirements_cnt = len(requirements)
@@ -86,6 +96,50 @@ def models_requirement():
             pull_model(requirement)
         else:
             print(f"[{i+1}/{requirements_cnt}] Model {requirement} already available.")
+
+#############################################################
+#                   REMOTE MODEL HANDLING (beta)            #
+#############################################################
+
+def list_remote_models() -> dict:
+    """
+    List all remote models available
+    :return:
+        {"openai": ["model1", "model2"], ...}
+    """
+    remote_models_config = Config.get("remote_models")
+    remote_models = {}
+    if remote_models_config:
+        # Check openai configuration for remote models
+        openai_conf = remote_models_config.get("openai")
+        if openai_conf:
+            remote_models["openai"] = []
+            if openai_conf["api_key"] is not None:
+                remote_models["openai"] = openai_conf["models"]
+        # Check etc. if needed later on
+    return remote_models
+
+def get_remote_models_dropdown() -> list:
+    """
+    Filter remote models for dropdown
+    :return:
+        [("Visible name", ":vendor:model_name"), ...]
+    """
+    remote_models = list_remote_models()
+    dropdown_options = []
+    for ai, models in remote_models.items():
+        for m in models:
+            name = f"{m} ☁️"
+            model = f":{ai}:{m}"
+            dropdown_options.append((name, model))
+    # Return list of tuples [("Visible name", "model name"), ...]
+    return dropdown_options
+
+
+
+#############################################################
+#                         TEST FUNCTIONS                    #
+#############################################################
 
 
 if __name__ == "__main__":
@@ -98,5 +152,8 @@ if __name__ == "__main__":
     pprint(get_models_dropdown())
     pprint(get_chat_models_dropdown())
 
-    models_requirement()
-    print(show_model("llama3.2:1b"))
+    #models_requirement()
+    #print(show_model("llama3.2:1b"))
+
+    pprint(list_remote_models())
+    pprint(get_remote_models_dropdown())
