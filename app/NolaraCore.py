@@ -41,18 +41,18 @@ class NolaraCore:
             if self.chatbot.model_name == model_name:                   # Handle Agent switch
                 return self.chatbot
 
+        self._tool_calls = self.is_agent_enabled(model_name)
         if model_name.startswith(":"):
             # remote model (workaround for OpenAI API)
             _remote = model_name.split(":")
             remote_vendor = _remote[1]
             remote_model_name = _remote[2]
             if remote_vendor == "openai":
-                self._tool_calls = False
                 self.chatbot = Chatbot.ChatOpenAI(remote_model_name)
                 return self.chatbot
         else:
             # local model
-            if self.is_agent_enabled(model_name):
+            if self._tool_calls:
                 # Craft agent chat model
                 self.chatbot = Agents.craft_agent_proto1(model_name)
                 return self.chatbot
@@ -60,22 +60,15 @@ class NolaraCore:
             self.chatbot = Chatbot.ChatOllama(model_name)
         return self.chatbot
 
-    def _is_tools(self, model_name):
-        """
-        This method checks whether tool calls are available for the given.
-        """
-        if self.chatbot:
-            if self.chatbot.model_name == model_name:                   # Handle Agent switch
-                return self._tool_calls
-        self._tool_calls = Models.show_model(model_name)["tool"]
-        return self._tool_calls
-
-    def is_agent_enabled(self, model_name) -> bool:
+    def is_agent_enabled(self, model_name=None) -> bool:
         """
         This method checks whether agents are enabled in the configuration
         and if tool calls are available.
         """
-        return Config.get("agents")["enabled"] and self._is_tools(model_name)
+        if model_name is None:
+            return self._tool_calls
+        _tool_calls = Models.show_model(model_name)["tool"]
+        return Config.get("agents")["enabled"] and _tool_calls
 
     @staticmethod
     def _wrap_response(response, box_width):
