@@ -102,7 +102,6 @@ class ChatOpenAI(ChatBase.ChatBase):
             return False, None
 
         self.add_user_message(query)
-
         if self.stream:
             print(">Bot: ", end="", flush=True)
             full_response = ""

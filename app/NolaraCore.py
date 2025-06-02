@@ -30,6 +30,14 @@ class NolaraCore:
         self.chatbot:Chatbot.ChatOllama|None = None # Chatbot instance
         self._tool_calls:bool = False               # Selected Chatbot tool call capability
         self.last_response:str = ""                 # Cache last response
+        self.chatbox = None                         # Should be set by child class
+
+    def _console(self, message):
+        message = f"[DBG] {message}"
+        if self.chatbox is None:
+            print(message)
+        else:
+            self.chatbox.write_line(message)
 
     def init_model(self, model_name):
         """
@@ -38,7 +46,9 @@ class NolaraCore:
         - Agentic mode (if available and enabled)
         """
         if self.chatbot:
-            if self.chatbot.model_name == model_name:                   # Handle Agent switch
+            local_model_match = model_name == self.chatbot.model_name
+            remote_model_match = model_name.startswith(":") and model_name.endswith(self.chatbot.model_name)
+            if local_model_match or remote_model_match:     # Handle Agent switch
                 return self.chatbot
 
         self._tool_calls = self.is_agent_enabled(model_name)
