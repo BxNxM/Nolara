@@ -1,0 +1,96 @@
+# IMPORT LLM LIBRARIES
+try:
+    from .lib import Models
+    from .lib import Chatbot
+    from .lib import Agents
+    from .lib import Config
+except ImportError:
+    from lib import Models
+    from lib import Chatbot
+    from lib import Agents
+    from lib import Config
+
+# IMPORT AUDIO LIBRARY IF AVAILABLE
+try:
+    from .lib import Audio
+except ImportError:
+    try:
+        from lib import Audio
+    except ImportError:
+        Audio = None
+
+import textwrap
+import re
+
+
+class NolaraCore:
+
+    def __init__(self):
+        self.version:str = "0.0.1"
+        self.chatbot:Chatbot.ChatOllama|None = None # Chatbot instance
+        self._tool_calls:bool = False               # Selected Chatbot tool call capability
+        self.last_response:str = ""                 # Cache last response
+
+    def init_model(self, model_name):
+        """
+        This method initializes a new model instance.
+        - Chat mode
+        - Agentic mode (if available and enabled)
+        """
+        if self.chatbot:
+            if self.chatbot.model_name == model_name:                   # Handle Agent switch
+                return self.chatbot
+
+        self._tool_calls = Models.show_model(model_name)["tool"]
+        if self.is_agent_enabled():
+            # Craft agent chat model
+            self.chatbot = Agents.craft_agent_proto1(model_name)
+            return self.chatbot
+        # Create chat model
+        self.chatbot = Chatbot.ChatOllama(model_name)
+        return self.chatbot
+
+    def is_agent_enabled(self) -> bool:
+        """
+        This method checks whether agents are enabled in the configuration
+        and if tool calls are available.
+        """
+        is_agents_enabled = Config.get("agents")["enabled"]
+        return self._tool_calls and is_agents_enabled
+
+    @staticmethod
+    def _wrap_response(response, box_width):
+        response_lines = re.split(r'\n| \* ', response)
+        wrapped_response = []
+        for line in response_lines:
+            if len(line) > box_width:
+                # Wrap the response text to fit inside the Log widget width
+                wrapped_response += textwrap.wrap(line, width=box_width)
+            else:
+                wrapped_response.append(line)
+        return wrapped_response
+
+    def model_process(self, query, wrap=True, box_width=80):
+        """
+        This method processes the query using the current chatbot model.
+        """
+        if self.chatbot:
+            state, response = self.chatbot.chat(query)
+            response = self.chatbot.human_output_parser(response)
+        else:
+            response = "No chatbot initialized"
+        self.last_response = response
+        if wrap:
+            response = self._wrap_response(response, box_width)
+        return response
+
+    def speach_to_text(self):
+        if Audio is None:
+            return
+        if len(self.last_response) > 0:
+            Audio.text_to_speech(self.last_response)
+
+    @staticmethod
+    def teardown():
+        if Audio is not None:
+            Audio.delete_audio_cache()

@@ -80,7 +80,7 @@ class ChatOpenAI(ChatBase.ChatBase):
         self.model_name = model_name
         self.stream = stream
         self.tools = tools if isinstance(tools, list) else []
-        openai_config = Config.get("remote").get("openai", None)
+        openai_config = Config.get("remote_models").get("openai", None)
         if openai_config is None:
             raise ValueError("OpenAI configuration not found in config file.")
         openai_api_key = openai_config.get("api_key", None)
@@ -129,8 +129,10 @@ class ChatOpenAI(ChatBase.ChatBase):
 
 
 if __name__ == "__main__":
-    chatbot = ChatOllama(model_name='gemma2:latest', stream=False)
-    chatbot.chat_loop()
-
-    #chatbot = ChatOpenAI(model_name='gpt-4', stream=False)
-    #chatbot.chat_loop()
+    _test_local = True
+    if _test_local:
+        chatbot = ChatOllama(model_name='gemma2:latest', stream=False)
+        chatbot.chat_loop()
+    else:
+        chatbot = ChatOpenAI(model_name='gpt-4', stream=False)
+        chatbot.chat_loop()

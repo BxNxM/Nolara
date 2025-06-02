@@ -8,9 +8,7 @@ from textual.widgets import Input, Button, Log, Select, Static, ProgressBar, Foo
 
 # Additional libraries
 import asyncio
-import textwrap
 import time
-import re
 import os
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -20,30 +18,22 @@ TCSS_PATH = os.path.join(SCRIPT_DIR, "textual.tcss")
 try:
     from .lib import Models
     from .lib import Chatbot
-    from .lib import Agents
     from .lib import Prompts
+    from . import NolaraCore
 except ImportError:
     from lib import Models
     from lib import Chatbot
-    from lib import Agents
     from lib import Prompts
+    import NolaraCore
 
-# IMPORT AUDIO LIBRARY IF AVAILABLE
-try:
-    from .lib import Audio
-except ImportError:
-    try:
-        from lib import Audio
-    except ImportError:
-        Audio = None
-
+# Load CSS file
 def load_css():
     with open(TCSS_PATH, "r") as f:
         textual_css = f.read()
     return textual_css
 
 
-class AIChatApp(App):
+class AIChatApp(App, NolaraCore.NolaraCore):
     BINDINGS = [
         ("q", "quit", "Quit"),
         ("escape", "quit", "Quit"),
@@ -51,7 +41,8 @@ class AIChatApp(App):
     CSS = load_css()
 
     def __init__(self):
-        self.chatbot:Chatbot.ChatOllama|None = None
+        NolaraCore.NolaraCore.__init__(self)
+        # Initialize global variables for the app
         self.model_dropdown_content = Models.get_chat_models_dropdown()
         # Initialize global textual.widgets widgets
         self.progress_bar = ProgressBar(total=100, id="progress-bar")
@@ -62,26 +53,12 @@ class AIChatApp(App):
         self.model_dropdown:Select|None = None
         self.system_prompt_input:Input|None = None
         self.prompt_dropdown:Select|None = None
-        self.agents_enabled = False
-        self.last_response:str = ""
         self.init_model(self._get_default_model())      # Preload model
-        super().__init__()
+        App.__init__(self)
 
     @staticmethod
     def _get_default_model():
         return Models.get_chat_models_dropdown()[0][1]
-
-    def init_model(self, model_name):
-        if self.chatbot:
-            if self.chatbot.model_name == model_name:                   # Handle Agent switch
-                return
-        self.agents_enabled = Models.show_model(model_name)["tool"]
-        if self.agents_enabled:
-            # Craft agent chat model
-            self.chatbot = Agents.craft_agent_proto1(model_name)
-            return
-        # Create chat model
-        self.chatbot = Chatbot.ChatOllama(model_name)
 
     def compose(self) -> ComposeResult:
         # Title bar with styled markup
@@ -126,7 +103,7 @@ class AIChatApp(App):
                     self.input = Input(placeholder="Type a message...", id="input")
                     yield self.input
                     yield Button("Send", id="send-button")
-                    if Audio is not None:
+                    if NolaraCore.Audio is not None:
                         yield Button("Speak", id="speak-button")
                     # TODO Microphone button (Listen)
 
@@ -146,7 +123,7 @@ class AIChatApp(App):
             self.chatbox.clear()
             self.progress_bar.progress = 0
             label_widget = self.query_one("#model-feature-label", Static)
-            if Models.show_model(model_name)["tool"]:
+            if self.is_agent_enabled():
                 label_widget.update("[b blue]Agentic[/]")
             else:
                 label_widget.update("[b green]Chat[/]")
@@ -163,7 +140,8 @@ class AIChatApp(App):
         if event.button.id == "send-button":
             await self.process_message()
         if event.button.id == "speak-button":
-            await self.speach_to_text()
+            self.chatbox.write_line("Speak...")
+            self.speach_to_text()
 
     async def on_input_submitted(self, event: Input.Submitted) -> None:
         """
@@ -175,20 +153,12 @@ class AIChatApp(App):
             self.chatbot.system_prompt(event.value)
 
     def action_quit(self) -> None:
-        if Audio is not None:
-            Audio.delete_audio_cache()
+        self.teardown()
         self.exit()
 
     #######################################################################
     ##                        AI Chat features                           ##
     #######################################################################
-    async def speach_to_text(self):
-        if Audio is None:
-            return
-        self.chatbox.write_line("Speak...")
-        if len(self.last_response) > 0:
-            Audio.text_to_speech(self.last_response)
-
     async def process_message(self) -> None:
         message = self.input.value.strip()
         if not message:
@@ -201,7 +171,8 @@ class AIChatApp(App):
         await self.update_progress(10)
         self.chatbox.write_line(f"\nYou: {message}")
         start_time = time.time()
-        response = self._chat_model_process(message)
+        box_width = self.chatbox.size.width - 4
+        response = self.model_process(message, wrap=True, box_width=box_width)
         await self.update_progress(80)
         duration = time.time() - start_time
         self.timer_display.update(f"⏱️  Time taken: {duration:.2f}s")
@@ -222,30 +193,6 @@ class AIChatApp(App):
     async def update_progress(self, value):
         self.progress_bar.progress = value
         await asyncio.sleep(0.01)
-
-    def _wrap_response(self, response):
-        box_width = self.chatbox.size.width -4
-        response_lines = re.split(r'\n| \* ', response)
-        wrapped_response = []
-        for line in response_lines:
-            if len(line) > box_width:
-                # Wrap the response text to fit inside the Log widget width
-                wrapped_response += textwrap.wrap(line, width=box_width)
-            else:
-                wrapped_response.append(line)
-        return wrapped_response
-
-    def _chat_model_process(self, query, wrap=True):
-        if self.chatbot:
-            state, response = self.chatbot.chat(query)
-            response = self.chatbot.human_output_parser(response)
-        else:
-            response = "No chatbot initialized"
-        self.last_response = response
-        if wrap:
-            response = self._wrap_response(response)
-
-        return response
 
 
 if __name__ == "__main__":

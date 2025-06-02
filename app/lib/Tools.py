@@ -7,7 +7,8 @@ try:
     from . import Config
 except ImportError:
     import Config
-ENABLED_TOOLS = Config.get("tools")
+
+ENABLED_TOOLS = Config.get("agents")["tools"]
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 TOOLS_DIR = os.path.join(SCRIPT_DIR, "tools")
