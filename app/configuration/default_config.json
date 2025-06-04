@@ -17,5 +17,9 @@
       "models": ["gpt-4"]}
     },
     // User key-value store for customization (futureproof, not used yet)
-    "customization": {}
+    "customization": {},
+    "command_line": {
+      "model": "gemma2:latest",
+      "prompt": "You are a helpful assistant."
+    }
 }

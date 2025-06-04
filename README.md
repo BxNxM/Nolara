@@ -148,6 +148,31 @@ cat Nolara/config.json
 
 > **models**: required models with autoinstall (ollama pull)
 
+## Nolara as a command line tool (beta)
+
+```bash
+(.venv) ➜  Nolara git:(main) ✗ cat README.md | ./main.py -p "Summarize the content in few sentences"
+
+.../usr_config.json already exists
+Check config updates...
+	No updates needed.
+[1/2] Model qwen3:4b already available.
+[2/2] Model gemma2:latest already available.
+
+Processing...
+
+Nolara is a privacy-focused, open-source AI assistant powered by Ollama and
+cutting-edge models. It runs locally on your machine without relying on the
+cloud, offering intelligent assistance for coding, creative tasks, and general
+inquiries.
+
+To use Nolara, you need to install Ollama, set up a Python virtual environment,
+install required dependencies, and download the desired models. You can then
+start the Nolara chat interface and customize it with system prompts and tools.
+The project also provides configuration options for selecting specific models
+and tools.
+```
+
 ---------------------------------------------------------------
 ---------------------------------------------------------------
 
