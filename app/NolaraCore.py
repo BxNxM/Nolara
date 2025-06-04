@@ -1,12 +1,14 @@
 # IMPORT LLM LIBRARIES
 try:
     from .lib import Models
-    from .lib import Chatbot
+    from .lib.ChatOllama import ChatOllama
+    from .lib.ChatOpenAI import ChatOpenAI
     from .lib import Agents
     from .lib import Config
 except ImportError:
     from lib import Models
-    from lib import Chatbot
+    from lib.ChatOllama import ChatOllama
+    from lib.ChatOpenAI import ChatOpenAI
     from lib import Agents
     from lib import Config
 
@@ -27,10 +29,10 @@ class NolaraCore:
 
     def __init__(self):
         self.version:str = "0.0.1"
-        self.chatbot:Chatbot.ChatOllama|None = None # Chatbot instance
-        self._tool_calls:bool = False               # Selected Chatbot tool call capability
-        self.last_response:str = ""                 # Cache last response
-        self.chatbox = None                         # Should be set by child class
+        self.chatbot:ChatOllama|ChatOpenAI|None = None          # Chatbot instance
+        self._tool_calls:bool = False                           # Selected Chatbot tool call capability
+        self.last_response:str = ""                             # Cache last response
+        self.chatbox = None                                     # Should be set by child class
 
     def _console(self, message):
         message = f"[DBG] {message}"
@@ -58,7 +60,7 @@ class NolaraCore:
             remote_vendor = _remote[1]
             remote_model_name = _remote[2]
             if remote_vendor == "openai":
-                self.chatbot = Chatbot.ChatOpenAI(remote_model_name)
+                self.chatbot = ChatOpenAI(remote_model_name)
                 return self.chatbot
         else:
             # local model
@@ -67,7 +69,7 @@ class NolaraCore:
                 self.chatbot = Agents.craft_agent_proto1(model_name)
                 return self.chatbot
             # Create chat model
-            self.chatbot = Chatbot.ChatOllama(model_name)
+            self.chatbot = ChatOllama(model_name)
         return self.chatbot
 
     def is_agent_enabled(self, model_name=None) -> bool:

@@ -1,9 +1,12 @@
 try:
-    from .Chatbot import ChatOllama
+    from .ChatOllama import ChatOllama
+    #from .ChatOpenAI import ChatOpenAI
     from .Tools import generate_tools
 except ImportError:
-    from Chatbot import ChatOllama
+    from ChatOllama import ChatOllama
+    #from ChatOpenAI import ChatOpenAI
     from Tools import generate_tools
+
 import re
 
 

@@ -2,10 +2,19 @@
 
 class ChatBase:
 
-    def __init__(self, system_prompt="Be helpful assistant."):
-        self.model_name = None
-        self._system_prompt = system_prompt
-        self.messages = [{"role": "system", "content": self._system_prompt}]
+    def __init__(self, system_prompt="Be helpful assistant.", debug_print=False):
+        self.model_name:str = None
+        self._system_prompt:str = system_prompt
+        self.messages:list = [{"role": "system", "content": self._system_prompt}]
+        self.debug_print:bool = debug_print
+
+    def __str__(self):
+        return (f"ChatBase(model_name={self.model_name},"
+                f"system_prompt={self._system_prompt}), message_history={len(self.messages)}")
+
+    def print(self, message, end="\n", flush=True):
+        if self.debug_print:
+            print(message,  end=end, flush=flush)
 
     def add_assistant_message(self, message):
         """
@@ -54,6 +63,9 @@ class ChatBase:
         """
         Start a chat loop.
         """
+        if not self.debug_print:
+            self.debug_print = True
+            print("Force enable debug_print - only command line mode supported in chat_loop")
         while True:
             try:
                 user_input = input(f"[{self.model_name}] Ask me something: ")
@@ -64,4 +76,4 @@ class ChatBase:
             state, response = self.chat(query=user_input)
             if not state:
                 break
-        print("Bye!")
+        self.print("Bye!")

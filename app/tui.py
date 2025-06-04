@@ -17,12 +17,10 @@ TCSS_PATH = os.path.join(SCRIPT_DIR, "textual.tcss")
 # IMPORT LLM LIBRARIES
 try:
     from .lib import Models
-    from .lib import Chatbot
     from .lib import Prompts
     from . import NolaraCore
 except ImportError:
     from lib import Models
-    from lib import Chatbot
     from lib import Prompts
     import NolaraCore
 
