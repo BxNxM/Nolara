@@ -10,6 +10,8 @@ from textual.widgets import Input, Button, Log, Select, Static, ProgressBar, Foo
 import asyncio
 import time
 import os
+import re
+import textwrap
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 TCSS_PATH = os.path.join(SCRIPT_DIR, "textual.tcss")
@@ -46,12 +48,12 @@ class AIChatApp(App, NolaraCore.NolaraCore):
         self.progress_bar = ProgressBar(total=100, id="progress-bar")
         self.timer_display = Static("⏱️  Time taken: 0s", id="timer-display")
         # Initialize global parameters for textual.widgets
-        self.chatbox:Log|None = None
+        self._chatbox:Log|None = None
         self.input:Input|None = None
         self.model_dropdown:Select|None = None
         self.system_prompt_input:Input|None = None
         self.prompt_dropdown:Select|None = None
-        self.init_model(self._get_default_model())      # Preload model
+        self.init_model(self._get_default_model(), tui_console=self.write_to_chatbox)      # Preload model
         App.__init__(self)
 
     @staticmethod
@@ -90,8 +92,8 @@ class AIChatApp(App, NolaraCore.NolaraCore):
 
             ######################### CHAT area with chatbox and buttons #########################
             with Vertical(id="chat-area"):
-                self.chatbox = Log(id="chat")
-                yield self.chatbox
+                self._chatbox = Log(id="chat")
+                yield self._chatbox
 
                 with Horizontal(id="progress-line"):
                     yield self.progress_bar
@@ -118,7 +120,7 @@ class AIChatApp(App, NolaraCore.NolaraCore):
         if event.select.id == "model-dropdown":
             # MODEL SELECTION
             model_name = event.value
-            self.chatbox.clear()
+            self._chatbox.clear()
             self.progress_bar.progress = 0
             label_widget = self.query_one("#model-feature-label", Static)
             if self.is_agent_enabled(model_name):
@@ -138,7 +140,7 @@ class AIChatApp(App, NolaraCore.NolaraCore):
         if event.button.id == "send-button":
             await self.process_message()
         if event.button.id == "speak-button":
-            self.chatbox.write_line("Speak...")
+            self.write_to_chatbox("Speak...")
             self.speach_to_text()
 
     async def on_input_submitted(self, event: Input.Submitted) -> None:
@@ -163,23 +165,20 @@ class AIChatApp(App, NolaraCore.NolaraCore):
             return
 
         selected_option = self.model_dropdown.value
-        self.init_model(selected_option)
+        self.init_model(selected_option, tui_console=self.write_to_chatbox)
 
-        self.chatbox.write_line("_" * (self.chatbox.size.width-4))
+        self.write_to_chatbox("_" * (self._chatbox.size.width-4))
         await self.update_progress(10)
-        self.chatbox.write_line(f"\nYou: {message}")
+        self.write_to_chatbox(f"\nYou: {message}")
         start_time = time.time()
-        box_width = self.chatbox.size.width - 4
+        box_width = self._chatbox.size.width - 4
         response = self.model_process(message, wrap=True, box_width=box_width)
         await self.update_progress(80)
         duration = time.time() - start_time
         self.timer_display.update(f"⏱️  Time taken: {duration:.2f}s")
 
-        if isinstance(response, list):
-            self.chatbox.write_line(f"Assistant {self.chatbot.model_name}:")
-            self.chatbox.write_lines(response)
-        else:
-            self.chatbox.write_line(f"{selected_option}: {response}")
+        #self.write_to_chatbox(f"Assistant {self.chatbot.model_name}:")
+        #self.write_to_chatbox(response)
 
         # Animate progress bar - dummy
         await self.update_progress(100)
@@ -188,9 +187,43 @@ class AIChatApp(App, NolaraCore.NolaraCore):
 
         self.input.value = ""
 
+    def write_to_chatbox(self, content):
+        """
+        Write content to the chatbox (Log widget), supporting single string, word, or list of strings.
+
+        Args:
+            content (str | list[str]): The message or list of messages to log.
+            wrap (bool): Whether to enable wrapping (uses chatbox width).
+            prefix (str): Optional string to prepend before each line.
+        """
+        if self._chatbox is None:
+            return
+
+        content = self._wrap_response(content, self._chatbox.size.width-4)
+
+        if isinstance(content, str):
+            self._chatbox.write_line(content)
+        elif isinstance(content, list):
+            self._chatbox.write_lines(content)
+        else:
+            raise TypeError("Content must be a string or list of strings.")
+
+    @staticmethod
+    def _wrap_response(response, box_width):
+        response_lines = re.split(r'\n| \* ', response)
+        wrapped_response = []
+        for line in response_lines:
+            if len(line) > box_width:
+                # Wrap the response text to fit inside the Log widget width
+                wrapped_response += textwrap.wrap(line, width=box_width)
+            else:
+                wrapped_response.append(line)
+        return wrapped_response
+
     async def update_progress(self, value):
         self.progress_bar.progress = value
         await asyncio.sleep(0.01)
+
 
 
 if __name__ == "__main__":

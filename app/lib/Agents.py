@@ -11,7 +11,7 @@ import json
 
 class Agent(ChatOllama):
 
-    def __init__(self, model_name, tools_dict, max_tool_steps=5):
+    def __init__(self, model_name, tools_dict, max_tool_steps=5, tui_console=None):
         """
         Initialize an Agent with a specific model and tools.
         Args:
@@ -21,7 +21,7 @@ class Agent(ChatOllama):
         """
         self.tools_mapping = tools_dict
         self.max_tool_steps = max_tool_steps
-        super().__init__(model_name, tools=self._get_tools_list())
+        super().__init__(model_name, tools=self._get_tools_list(), tui_console=tui_console)
 
     def _get_tools_list(self):
         return list(self.tools_mapping.values())
@@ -55,8 +55,7 @@ class Agent(ChatOllama):
                 fn_args = json.loads(tool.function.arguments or "{}")
             except json.JSONDecodeError:
                 fn_args = {}
-                self.print(
-                    f"[Warning] Could not decode arguments for tool '{fn_name}': {tool.function.arguments}")
+                self.print(f"[Warning] Could not decode arguments for tool '{fn_name}': {tool.function.arguments}")
 
         # Resolve callable - function with its parameters
         fn = self.tools_mapping.get(fn_name)
@@ -84,7 +83,7 @@ class Agent(ChatOllama):
 
     def chat(self, query):
         """
-        Chat with the model and support recursive tool use.
+        Chat with the model and support iterative tool usage.
         """
         self.add_user_message(query)
         tool_result = {}
@@ -107,19 +106,22 @@ class Agent(ChatOllama):
 
         return True, {"response": response, "tool_result": tool_result}
 
-    @staticmethod
-    def human_output_parser(response, remove_thinking=True):
+    def human_output_parser(self, response, remove_thinking=True):
         _response = ChatOllama.human_output_parser(response["response"])
         if remove_thinking:
             _is_thinking = "<think>" in _response.lower()
             _response = re.sub(r"<think>.*?</think>", "", _response, flags=re.DOTALL)
             _response = f"{'Thinking...\n' if _is_thinking else ''}{_response}".strip()
         _tool_result = str(response["tool_result"])
-        return _response + "\n\n" + _tool_result
+
+        _response = _response + "\n\n" + _tool_result
+        self.write_tui(f"Assistant {self.model_name}:")
+        self.write_tui(_response)
+        return _response
 
 
-def craft_agent_proto1(model_name='qwen3:4b'):
-    _agent = Agent(model_name, tools_dict=generate_tools())
+def craft_agent_proto1(model_name='qwen3:4b', tui_console=None):
+    _agent = Agent(model_name, tools_dict=generate_tools(), tui_console=tui_console)
     return _agent
 
 

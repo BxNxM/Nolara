@@ -21,9 +21,6 @@ except ImportError:
     except ImportError:
         Audio = None
 
-import textwrap
-import re
-
 
 class NolaraCore:
 
@@ -32,16 +29,8 @@ class NolaraCore:
         self.chatbot:ChatOllama|ChatOpenAI|None = None          # Chatbot instance
         self._tool_calls:bool = False                           # Selected Chatbot tool call capability
         self.last_response:str = ""                             # Cache last response
-        self.chatbox = None                                     # Should be set by child class
 
-    def _console(self, message):
-        message = f"[DBG] {message}"
-        if self.chatbox is None:
-            print(message)
-        else:
-            self.chatbox.write_line(message)
-
-    def init_model(self, model_name):
+    def init_model(self, model_name, tui_console=None):
         """
         This method initializes a new model instance.
         - Chat mode
@@ -66,10 +55,10 @@ class NolaraCore:
             # local model
             if self._tool_calls:
                 # Craft agent chat model
-                self.chatbot = Agents.craft_agent_proto1(model_name)
+                self.chatbot = Agents.craft_agent_proto1(model_name, tui_console=tui_console)
                 return self.chatbot
             # Create chat model
-            self.chatbot = ChatOllama(model_name)
+            self.chatbot = ChatOllama(model_name, stream=False, tui_console=tui_console)
         return self.chatbot
 
     def is_agent_enabled(self, model_name=None) -> bool:
@@ -82,18 +71,6 @@ class NolaraCore:
         _tool_calls = Models.show_model(model_name)["tool"]
         return Config.get("agents")["enabled"] and _tool_calls
 
-    @staticmethod
-    def _wrap_response(response, box_width):
-        response_lines = re.split(r'\n| \* ', response)
-        wrapped_response = []
-        for line in response_lines:
-            if len(line) > box_width:
-                # Wrap the response text to fit inside the Log widget width
-                wrapped_response += textwrap.wrap(line, width=box_width)
-            else:
-                wrapped_response.append(line)
-        return wrapped_response
-
     def model_process(self, query, wrap=True, box_width=80):
         """
         This method processes the query using the current chatbot model.
@@ -104,8 +81,6 @@ class NolaraCore:
         else:
             response = "No chatbot initialized"
         self.last_response = response
-        if wrap:
-            response = self._wrap_response(response, box_width)
         return response
 
     def speach_to_text(self):
