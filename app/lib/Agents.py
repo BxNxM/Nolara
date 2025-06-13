@@ -11,7 +11,7 @@ import json
 
 class Agent(ChatOllama):
 
-    def __init__(self, model_name, tools_dict, max_tool_steps=5, tui_console=None):
+    def __init__(self, model_name, max_tool_steps=5, tui_console=None):
         """
         Initialize an Agent with a specific model and tools.
         Args:
@@ -19,7 +19,7 @@ class Agent(ChatOllama):
             tools_dict: dictionary mapping tool names to their corresponding functions or classes
             max_tool_steps: maximum number of steps allowed for a single tool execution (prevent infinite loops)
         """
-        self.tools_mapping = tools_dict
+        self.tools_mapping = generate_tools()
         self.max_tool_steps = max_tool_steps
         super().__init__(model_name, tools=self._get_tools_list(), tui_console=tui_console)
 
@@ -120,11 +120,6 @@ class Agent(ChatOllama):
         return _response
 
 
-def craft_agent_proto1(model_name='qwen3:4b', tui_console=None):
-    _agent = Agent(model_name, tools_dict=generate_tools(), tui_console=tui_console)
-    return _agent
-
-
 if __name__ == "__main__":
-    agent = craft_agent_proto1()
+    agent = Agent(model_name='qwen3:4b', tui_console=None)
     agent.chat_loop()

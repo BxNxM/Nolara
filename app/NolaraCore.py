@@ -49,13 +49,13 @@ class NolaraCore:
             remote_vendor = _remote[1]
             remote_model_name = _remote[2]
             if remote_vendor == "openai":
-                self.chatbot = ChatOpenAI(remote_model_name)
+                self.chatbot = ChatOpenAI(remote_model_name, tui_console=tui_console)
                 return self.chatbot
         else:
             # local model
             if self._tool_calls:
                 # Craft agent chat model
-                self.chatbot = Agents.craft_agent_proto1(model_name, tui_console=tui_console)
+                self.chatbot = Agents.Agent(model_name, max_tool_steps=10, tui_console=tui_console)
                 return self.chatbot
             # Create chat model
             self.chatbot = ChatOllama(model_name, stream=False, tui_console=tui_console)

@@ -9,8 +9,8 @@ except ImportError:
 
 
 class ChatOpenAI(ChatBase.ChatBase):
-    def __init__(self, model_name:str, tools: list|None=None, stream:bool=False, debug_print:bool=False):
-        super().__init__(debug_print=debug_print)
+    def __init__(self, model_name:str, tools: list|None=None, stream:bool=False, debug_print:bool=False, tui_console=None):
+        super().__init__(debug_print=debug_print, tui_console=tui_console)
         self.model_name = model_name
         self.stream = stream
         self.tools = tools if isinstance(tools, list) else []
@@ -37,22 +37,22 @@ class ChatOpenAI(ChatBase.ChatBase):
 
         self.add_user_message(query)
         if self.stream:
-            self.print(f"Model:{self.model_name}> ")
+            self.write_tui(f"Model:{self.model_name}> ")
             full_response = ""
             response = self.run_model(stream=True)
             for chunk in response:
                 # chunk.choices[0].delta can have 'content'
                 delta = chunk.choices[0].delta
                 content = delta.get("content", "")
-                self.print(content, end="", flush=True)
+                self.write_tui(content, end="", flush=True)
                 full_response += content
-            self.print('')
+            self.write_tui('')
             self.add_assistant_message(full_response)
             return True, {"message": {"content": full_response}}
         else:
             response = self.run_model(stream=False)
             answer = response.choices[0].message.content
-            self.print(f"Model:{self.model_name}>\n{answer}")
+            self.write_tui(f"Model:{self.model_name}>\n{answer}")
             self.add_assistant_message(answer)
             return True, response
 
