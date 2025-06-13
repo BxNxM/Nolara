@@ -30,8 +30,6 @@ def _command_line_interface(prompt, text):
     llm.init_model(command_line_model)
     llm.chatbot.system_prompt(prompt=command_line_prompt)  # Set system prompt for the chatbot
     response = llm.model_process(query=text)               # Process the provided text context
-    for r in response:
-        print(r)
 
 
 def interface_selector():
