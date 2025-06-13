@@ -33,7 +33,7 @@ class ChatOllama(ChatBase.ChatBase):
                                messages=self.messages,
                                stream=stream)
 
-    def chat(self, query):
+    def chat(self, query) -> (bool, ollama._types.ChatResponse|dict|None):
         response = None
         if not query:
             return False, response

@@ -4,6 +4,7 @@ from gtts.lang import tts_langs
 import os
 import platform
 import shutil
+from pathlib import Path
 
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
 AUDIO_CACHE_DIR = os.path.join(SCRIPT_DIR, "../.audio_cache")
@@ -96,6 +97,23 @@ def text_to_speech(text, language=None):
 
 
 def delete_audio_cache():
+    # Delete from os player cache
+    target_dir = Path.home() / "Music/Music/Media.localized/Music/Unknown Artist/Unknown Album"
+    if target_dir.exists() and target_dir.is_dir():
+        print(f"Scanning for .mp3 files under: {target_dir}")
+        deleted = 0
+        for mp3_file in target_dir.rglob("*.mp3"):
+            try:
+                mp3_file.unlink()
+                print(f"Deleted: {mp3_file}")
+                deleted += 1
+            except Exception as e:
+                print(f"Failed to delete {mp3_file}: {e}")
+        print(f"Done. {deleted} .mp3 file(s) deleted.")
+    else:
+        print(f"Target path does not exist or is not a directory: {target_dir}")
+
+    # Delete from project cache
     if os.path.exists(AUDIO_CACHE_DIR):
         shutil.rmtree(AUDIO_CACHE_DIR)
         return True
