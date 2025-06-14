@@ -11,7 +11,7 @@ import json
 
 class Agent(ChatOllama):
 
-    def __init__(self, model_name, max_tool_steps=5, tui_console=None):
+    def __init__(self, model_name, max_tool_steps=5, stream=False, tui_console=None):
         """
         Initialize an Agent with a specific model and tools.
         Args:
@@ -21,7 +21,7 @@ class Agent(ChatOllama):
         """
         self.tools_mapping = generate_tools()
         self.max_tool_steps = max_tool_steps
-        super().__init__(model_name, tools=self._get_tools_list(), tui_console=tui_console)
+        super().__init__(model_name, tools=self._get_tools_list(), stream=stream, tui_console=tui_console)
 
     def _get_tools_list(self):
         return list(self.tools_mapping.values())
