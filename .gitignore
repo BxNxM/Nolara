@@ -2,7 +2,7 @@
 **/__pycache__/
 **.mp3
 **.DS_Store
-app/configuration/usr_config.json
+nolara/configuration/usr_config.json
 
 # Packaging
 dist/
