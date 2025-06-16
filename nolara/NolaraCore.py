@@ -25,7 +25,7 @@ except ImportError:
 class NolaraCore:
 
     def __init__(self, stream=False):
-        self.version:str = "0.0.1"
+        self.version:str = "0.1.0"
         self.chatbot:ChatOllama|ChatOpenAI|None = None          # Chatbot instance
         self._stream:bool = stream                                # Stream mode flag
         self._tool_calls:bool = False                           # Selected Chatbot tool call capability
@@ -72,12 +72,24 @@ class NolaraCore:
         _tool_calls = Models.show_model(model_name)["tool"]
         return Config.get("agents")["enabled"] and _tool_calls
 
-    def model_process(self, query, wrap=True, box_width=80):
+    def model_process(self, query):
         """
         This method processes the query using the current chatbot model.
         """
         if self.chatbot:
             state, response = self.chatbot.chat(query)
+            response = self.chatbot.human_output_parser(response)
+        else:
+            response = "No chatbot initialized"
+        self.last_response = response
+        return response
+
+    async def async_model_process(self, query):
+        """
+        This method processes the query using the current chatbot model.
+        """
+        if self.chatbot:
+            state, response = await self.chatbot.async_chat(query)
             response = self.chatbot.human_output_parser(response)
         else:
             response = "No chatbot initialized"

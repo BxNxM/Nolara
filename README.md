@@ -12,105 +12,38 @@
 https://ollama.com
 ```
 
-### 1.2. Setting Up a Python Virtual Environment and Installing Requirements
-
-Follow these steps to create a virtual environment using `virtualenv`, install dependencies from `requirements.txt`, and activate the environment.
-
-```bash
-cd Nolara/
-
-# Create
-python3 -m venv .venv
-
-# Activate
-source .venv/bin/activate
-
-# Install base dependencies
-pip install -r ./app/requirements/requirements-base.txt
-
-# Install Audio dependencies (optional)
-pip install -r ./app/requirements/requirements-audio.txt
-```
-
-
-> This command you will need to activate the virtual environment: `source .venv/bin/activate`
-
-
-### 1.3. Install models
-
-**Small profile**
-
-```bash
-ollama pull gemma2:latest
-ollama pull gemma3:4b
-ollama pull qwen3:4b
-```
-
-**Medium profile**
-
-```bash
-ollama pull gemma2:latest
-ollama pull gemma3:12b
-ollama pull qwen3:8b
-```
-
-
-#### Model informations
-
-Current promising models
-
-[gemma2 details](https://ollama.com/library/gemma2)
-
-[gemma3 details](https://ollama.com/library/gemma3)
-
-[qwen3 details](https://ollama.com/library/qwen3)
-
-```bash
-ollama list
-
-gemma2:latest              ff02c3702f32    5.4 GB
-gemma3:12b                 f4031aab637d    8.1 GB
-```
-
-Reasoning models + Tools
-
-```bash
-qwen3:14b                  7d7da67570e2    9.3 GB
-```
-
-## 2. Start the Nolara chat interface
+### 1.2 Build nolara app
 
 ```bash
 cd Nolara
-source .venv/bin/activate
-./main.py
+./build.bash
 ```
+
+### 1.3 Run nolara app
+
+```bash
+nolara
+```
+
+Other examples:
+
+```bash
+nolara --help
+cat README | nolara -p "Summarize please"
+```
+
+> Then you have system wide `nolara` command available.
 
 ![NolaraTUI2](./media/NolaraTUI2.png?raw=true)
 
 ## Customzation
-
-### Project structure
-
-```bash
-(.venv) ➜  Nolara git:(main) ✗ ll
-total 40
--rw-r--r--  1 usr  staff    11K May 25 20:26 LICENSE
--rw-r--r--@ 1 usr  staff   2.3K May 31 18:55 README.md
-drwxr-xr-x  9 usr  staff   288B May 31 18:48 app
--rwxr-xr-x@ 1 usr  staff    68B May 31 18:44 main.py
-drwxr-xr-x  5 usr  staff   160B May 31 18:57 media
-lrwxr-xr-x  1 usr  staff    16B May 31 18:48 requirements -> app/requirements
-lrwxr-xr-x  1 usr  staff    22B May 31 18:43 system_prompts -> app/lib/system_prompts
-lrwxr-xr-x  1 usr  staff    14B May 31 18:43 tools -> app/lib/tools/
-```
 
 ### 💬 system_prompts
 
 Add **custom system prompts** under
 
 ```bash
-(.venv) ➜  Nolara git:(main) ✗ ll system_prompts/
+(.venv) ➜  Nolara git:(main) ✗ ll ~/.nolara/system_prompts/
 total 16
 -rw-r--r--@ 1 usr  staff    52B May 31 16:39 basic.txt
 -rw-r--r--@ 1 usr  staff    68B May 31 12:52 short.txt
@@ -121,7 +54,7 @@ total 16
 Add **custom tools** under
 
 ```bash
-(.venv) ➜  Nolara git:(main) ✗ ll tools/
+(.venv) ➜  Nolara git:(main) ✗ ll ~/.nolara/tools/
 total 8
 -rw-r--r--@ 1 usr  staff   606B May 31 18:14 basic.py
 -rw-r--r--@ 1 usr  staff     0B May 31 18:34 websearch.py
@@ -130,8 +63,7 @@ total 8
 ## Configuration
 
 ```bash
-cd Nolara
-cat Nolara/config.json
+cat ~/.nolara/config.json
 ```
 
 ```json
@@ -171,6 +103,86 @@ install required dependencies, and download the desired models. You can then
 start the Nolara chat interface and customize it with system prompts and tools.
 The project also provides configuration options for selecting specific models
 and tools.
+```
+
+
+## Model handling TL;DR
+
+#### Manual install:
+
+**Small profile example**
+
+```bash
+ollama pull gemma2:latest
+ollama pull gemma3:4b
+ollama pull qwen3:4b
+```
+
+**Medium profile example**
+
+```bash
+ollama pull gemma2:latest
+ollama pull gemma3:12b
+ollama pull qwen3:8b
+```
+
+
+#### Model info
+
+Current promising models
+
+[gemma2 details](https://ollama.com/library/gemma2)
+
+[gemma3 details](https://ollama.com/library/gemma3)
+
+[qwen3 details](https://ollama.com/library/qwen3)
+
+```bash
+ollama list
+
+gemma2:latest              ff02c3702f32    5.4 GB
+gemma3:12b                 f4031aab637d    8.1 GB
+```
+
+Reasoning models + Tools
+
+```bash
+qwen3:14b                  7d7da67570e2    9.3 GB
+```
+
+
+## Development envoronment 
+
+### Setting Up a Python Virtual Environment and Installing Requirements
+
+Follow these steps to create a virtual environment using `virtualenv`, install dependencies from `requirements.txt`, and activate the environment.
+
+```bash
+cd Nolara/
+
+# Create
+python3 -m venv .venv
+
+# Activate
+source .venv/bin/activate
+
+# Install base dependencies
+pip install -r ./nolara/requirements/requirements-base.txt
+
+# Install Audio dependencies (optional)
+pip install -r ./nolara/requirements/requirements-audio.txt
+```
+
+
+> This command you will need to activate the virtual environment: `source .venv/bin/activate`
+
+
+### Start the Nolara chat interface
+
+```bash
+cd Nolara
+source .venv/bin/activate
+./nolara/main.py
 ```
 
 ---------------------------------------------------------------

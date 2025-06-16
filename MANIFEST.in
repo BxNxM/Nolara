@@ -1,0 +1,6 @@
+include README.md LICENSE
+recursive-include nolara/configuration default_config.json
+recursive-include nolara/lib/system_prompts *.txt
+recursive-include nolara/lib/tools *.py
+include nolara/textual.tcss
+

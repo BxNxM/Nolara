@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
 
-from app.lib import Models
+try:
+    from .lib import Models, Config
+    from . import tui
+    from .NolaraCore import NolaraCore
+    from .user_links import setup_nolara_user_config_links
+except ImportError:
+    from lib import Models, Config
+    import tui
+    from NolaraCore import NolaraCore
+    from user_links import setup_nolara_user_config_links
 
 import argparse
 import select
@@ -11,7 +20,7 @@ def _gui_interface():
     Runs the GUI interface.
     - Default interface
     """
-    import app.tui as tui
+    setup_nolara_user_config_links()
     tui.AIChatApp().run()
 
 
@@ -21,8 +30,6 @@ def _command_line_interface(prompt, text):
     """
     #print(f"=== PoC ===\nPrompt: {prompt}, TextIn:\n{text}")
     print("Processing...")
-    from app.NolaraCore import NolaraCore
-    import app.lib.Config as Config
     command_line_model = Config.get("command_line")["model"]
     command_line_prompt = prompt if prompt else Config.get("command_line")["prompt"]
 
@@ -50,7 +57,13 @@ def interface_selector():
     return lambda: _gui_interface()
 
 
-if __name__ == '__main__':
+
+def main():
     Models.models_requirement()
     interface = interface_selector()
     interface()
+
+
+if __name__ == '__main__':
+    main()
+

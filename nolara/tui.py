@@ -41,7 +41,7 @@ class AIChatApp(App, NolaraCore.NolaraCore):
     CSS = load_css()
 
     def __init__(self):
-        NolaraCore.NolaraCore.__init__(self)
+        NolaraCore.NolaraCore.__init__(self, stream=False)
         # Initialize global variables for the app
         self.model_dropdown_content = Models.get_chat_models_dropdown() + Models.get_remote_models_dropdown()
         # Initialize global textual.widgets widgets
@@ -171,8 +171,8 @@ class AIChatApp(App, NolaraCore.NolaraCore):
         await self.update_progress(10)
         self.write_to_chatbox(f"\nYou: {message}")
         start_time = time.time()
-        box_width = self._chatbox.size.width - 4
-        response = self.model_process(message, wrap=True, box_width=box_width)
+        #response = await self.async_model_process(message)
+        response = self.model_process(message)
         await self.update_progress(80)
         duration = time.time() - start_time
         self.timer_display.update(f"⏱️  Time taken: {duration:.2f}s")
@@ -199,7 +199,8 @@ class AIChatApp(App, NolaraCore.NolaraCore):
         if self._chatbox is None:
             return
 
-        content = self._wrap_response(content, self._chatbox.size.width-4)
+        box_width = self._chatbox.size.width - 4
+        content = self._wrap_response(content, box_width)
 
         if isinstance(content, str):
             self._chatbox.write_line(content)
