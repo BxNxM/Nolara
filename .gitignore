@@ -3,6 +3,7 @@
 **.mp3
 **.DS_Store
 nolara/configuration/usr_config.json
+nolara/lib/system_prompts/_*.txt
 
 # Packaging
 dist/

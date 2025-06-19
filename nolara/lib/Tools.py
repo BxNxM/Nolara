@@ -8,16 +8,21 @@ try:
 except ImportError:
     import Config
 
+
 ENABLED_TOOLS = Config.get("agents")["tools"]
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 TOOLS_DIR = os.path.join(SCRIPT_DIR, "tools")
 FUNCTION_TOOLS_MAPPER: dict = {}
+# Add Tools dir to system path to enable tool "sub imports"
+import sys
+if TOOLS_DIR not in sys.path:
+    sys.path.insert(0, TOOLS_DIR)
 
 
 # Step 1: List all .py files in the tools folder
 def list_py_files() -> list[str]:
-    return [f for f in os.listdir(TOOLS_DIR) if f.endswith(".py") and not f.startswith("__")]
+    return [f for f in os.listdir(TOOLS_DIR) if f.endswith(".py") and not f.startswith("_")]
 
 
 # Step 2: Extract function names from a .py file (without importing it)
@@ -25,7 +30,7 @@ def list_functions_in_file(file_name: str) -> list[str]:
     absolute_path = os.path.join(TOOLS_DIR, file_name)
     with open(absolute_path, "r", encoding="utf-8") as f:
         node = ast.parse(f.read(), filename=absolute_path)
-    return [n.name for n in node.body if isinstance(n, ast.FunctionDef)]
+    return [n.name for n in node.body if isinstance(n, ast.FunctionDef) and not n.name.startswith("_")]
 
 
 # Step 3: Dynamically import a module given its filename
