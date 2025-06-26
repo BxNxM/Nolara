@@ -1,12 +1,16 @@
 import ast
 import json
 from pathlib import Path
-
-from _micrOSClient import micrOSClient
 from pprint import pprint
 
+try:
+    from ._micrOSClient import micrOSClient
+except ImportError:
+    from _micrOSClient import micrOSClient
+
 DEVICE_CLIS = {}
-TOOL_CONFIG = Path(__file__).parent / "_micrOS_devices.json"
+TOOL_CONFIG = Path(__file__).parent.parent.parent.parent / "configuration" / "micros_tools_devices.json"
+CONN_CACHE = Path(__file__).parent.parent.parent.parent / "configuration" / "device_conn_cache.json"
 
 
 def _feature_discovery(device: str) -> (list, list):
@@ -36,6 +40,7 @@ def _feature_discovery(device: str) -> (list, list):
             print(f"Parsed modules response data: {loaded_modules} {type(loaded_modules)}")
         except Exception as e:
             print(f"_feature_discovery error: {e}")
+            return [], []
     else:
         print(f"_feature_discovery error: {response}")
 
@@ -86,39 +91,60 @@ def run_command_on_device(device: str, command: str) -> dict:
 
     com_obj = DEVICE_CLIS.get(device, None)
     if com_obj is None:
-        com_obj = micrOSClient(host=device, port=9008, pwd="ADmin123", dbg=False)
-        DEVICE_CLIS[device] = com_obj
+        try:
+            com_obj = micrOSClient(host=device, port=9008, pwd="ADmin123", dbg=False)
+            DEVICE_CLIS[device] = com_obj
+        except Exception as e:
+            return {"status": "error", "response": [str(e)], "device": device}
     try:
         response = com_obj.send_cmd(command, timeout=3, retry=5, stream=False)
     except Exception as e:
-        response = str(e)
+        response = [str(e)]
     return {"status": "success", "response": response, "device": device}
 
 
-def load_device_config():
+def _load_devtoolkit_conn_cache() -> list:
     """
-    Returns:
-    [{
-        "device_name": "LivingKitchen.local",
+    Preload the device toolkit connection cache
+    """
+    try:
+        with open(CONN_CACHE, "r") as f:
+            conn_cache = json.load(f)
+    except FileNotFoundError:
+        conn_cache = {}
+    '''
+        "__localhost__": [
+        "127.0.0.1",
+        9008,
+        "__simulator__"
+    ],
+    '''
+    devices = []
+    if conn_cache:
+        for dev_uid in conn_cache:
+            device_name = conn_cache[dev_uid][2]
+            if device_name.startswith("_"):
+                continue
+            dhcp_hostname = f"{device_name}.local"
+            devices.append(dhcp_hostname)
+    print(f"{CONN_CACHE}\n\tDevices: {devices}")
+    return devices
+
+def _create_device_config(name, location=None, features=None, feature_calls=None):
+    features = features or []
+    feature_calls = feature_calls or []
+
+    return {
+        "device_name": name,
         "metadata": {
-            "location": "Living Room",
-            "features": ["color", "brightness"],
-            "feature_calls": []
+            "location": location,
+            "features": features,
+            "feature_calls": feature_calls
         }
-    },
-    ...
-    ]
-    """
+    }
 
-    default_config = [{
-        "device_name": "__simulator__",
-        "metadata": {
-            "location": "simulation",
-            "features": ["color", "brightness"],
-            "feature_calls": []
-            }
-        }]
-
+def load_device_config() -> list[dict]:
+    default_config = [_create_device_config(name="node01.local", location="who knows")]
     try:
         with open(TOOL_CONFIG, "r") as f:
             config_data = json.load(f)
@@ -134,7 +160,17 @@ def load_device_config():
 
 
 def auto_feature_discovery(update_config=False):
+    # Load tool cache
     config = load_device_config()
+    # Import toolkit connection cache devices
+    device_dhcp_names = _load_devtoolkit_conn_cache()
+    for dev in device_dhcp_names:
+        dev_is_exists = sum([1 for c in config if c["device_name"] == dev]) > 0
+        if not dev_is_exists:
+            config.append(_create_device_config(name=dev))
+    pprint(config)
+
+    # Feature discovery
     for index, device in enumerate(config):
         device_name = device["device_name"]
         features_details, features = _feature_discovery(device_name)

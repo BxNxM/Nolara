@@ -8,3 +8,7 @@ nolara/lib/system_prompts/_*.txt
 # Packaging
 dist/
 nolara.egg-info/
+
+# Tools/Userdata
+nolara/configuration/device_conn_cache.json
+nolara/configuration/micros_tools_devices.json

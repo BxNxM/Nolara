@@ -14,12 +14,12 @@ def get_symlink_targets():
     # Get directory where this script resides
     project_root = Path(__file__).parent.resolve()
 
-    user_config_file = project_root / "configuration" / "usr_config.json"
+    user_configs = project_root / "configuration"
     system_prompts_dir = project_root / "lib" / "system_prompts"
     agent_tools_dir = project_root / "lib" / "tools"
 
     return {
-        NOLARA_USER_CONFIG / "config.json": user_config_file,
+        NOLARA_USER_CONFIG / "configs": user_configs,
         NOLARA_USER_CONFIG / "system_prompts": system_prompts_dir,
         NOLARA_USER_CONFIG / "tools": agent_tools_dir,
     }

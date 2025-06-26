@@ -1,4 +1,6 @@
-from _micrOS_common import load_device_config, run_command_on_device
+from micros_interface._micrOS_common import (load_device_config,
+                                             run_command_on_device,
+                                             auto_feature_discovery)
 
 '''
 def color_setter(device: str, r: int, g: int, b: int) -> dict:
@@ -67,3 +69,16 @@ def list_remote_devices() -> list[dict]:
     """
 
     return load_device_config()
+
+
+def run_device_feature_discovery():
+    """
+    Automatically discover features of all connected devices.
+    This function can be called when user asks for refreshing device feature list.
+    User approval is needed to call this function!
+
+    Returns:
+        list[dict]: Each device includes name, location, and features
+    """
+
+    return auto_feature_discovery()
