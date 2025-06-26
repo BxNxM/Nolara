@@ -1,6 +1,6 @@
-from _micrOSClient import micrOSClient
+from _micrOS_common import load_device_config, run_command_on_device
 
-
+'''
 def color_setter(device: str, r: int, g: int, b: int) -> dict:
     """
     If user asks for light color change.
@@ -16,7 +16,7 @@ def color_setter(device: str, r: int, g: int, b: int) -> dict:
       dict: response from the device after setting color
     """
     color_command = f"rgb color {r} {g} {b}"
-    response = _run_command_on_device(device, color_command)
+    response = run_command_on_device(device, color_command)
     return response
 
 
@@ -33,28 +33,25 @@ def brightness_setter(device: str, brightness: int) -> dict:
       dict: response from the device after setting brightness
     """
     brightness_command = f"rgb brightness {brightness}"
-    response = _run_command_on_device(device, brightness_command)
+    response = run_command_on_device(device, brightness_command)
     return response
+'''
 
-
-def _run_command_on_device(device: str, command: str) -> dict:
+def generic_remote_command_executor(device: str, command: str) -> dict:
     """
+    Generic function to execute a remote command on a device.
+    Always check the command against list_remote_devices[x][metadata][feature_calls] before calling this function.
+
     Args:
-        device (str): Name of the device
-        command (str): Command to run, structure: <module> <function> <*params>
+        device: device name
+        command: command to be executed on the remote device, from list_remote_devices[x][metadata][feature_calls]
+
     Returns:
-        dict: Response from the device, structure: {"status": "success"|"error", "response": <response>}
+      dict: response from the device after command execution
     """
-    """
-    com_obj = micrOSClient(host=device, port=9008, pwd="ADmin123", dbg=True)
-    try:
-        response = com_obj.send_cmd(command)
-    except Exception as e:
-        response = {"status": "error", "response": str(e)}
-    """
-    com_obj = micrOSClient(host=device, port=9008, pwd="ADmin123", dbg=False)
-    response = com_obj.send_cmd(command, timeout=3, retry=5, stream=False)
-    return {"status": "success", "response": response, "device": device}
+    response = run_command_on_device(device, command)
+    response['command'] = command  # Add the executed command to the response for logging or debugging purposes.
+    return response
 
 
 def list_remote_devices() -> list[dict]:
@@ -68,19 +65,5 @@ def list_remote_devices() -> list[dict]:
     Returns:
         list[dict]: Each device includes name, location, and features
     """
-    return [
-        {
-            "device_name": "LivingKitchen.local",
-            "metadata": {
-                "location": "Living Room",
-                "features": ["color", "brightness"]
-            }
-        },
-        {
-            "device_name": "Cabinet.local",
-            "metadata": {
-                "location": "Kitchen",
-                "features": ["color"]
-            }
-        }
-    ]
+
+    return load_device_config()

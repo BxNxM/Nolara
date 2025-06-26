@@ -2,22 +2,6 @@ import socket
 import select
 import time
 
-def load_command_history(prompt_getter):
-    """Optional command history feature"""
-    try:
-        try:
-            from .micrOSClientHistory import CommandInterface
-        except:
-            from micrOSClientHistory import CommandInterface
-    except Exception as e:
-        print(f"Command history - disabled (readline module error): {e}")
-        return None
-    try:
-        return CommandInterface(prompt=prompt_getter)
-    except Exception as e:
-        print(f"Command history error: {e}")
-    return None
-
 
 class micrOSClient:
     CONN_MAP = {}
@@ -317,7 +301,7 @@ class micrOSClient:
             if "busy" in str(e) or "timed out" in str(e) or "No route to host" in str(e) or "Host is down" in str(e):
                 return
 
-        history = load_command_history(self.telnet_prompt)              # History: Beta feature
+        history = None                                                  # Legacy - disable history
         print(self.telnet_prompt, end="")
         is_empty = False                                                # Empty input support
         while True:
