@@ -2,5 +2,7 @@ include README.md LICENSE
 recursive-include nolara/configuration default_config.json
 recursive-include nolara/lib/system_prompts *.txt
 recursive-include nolara/lib/tools *.py
+include nolara/configuration/micros_tool_inputs/sfuncman.json
+include nolara/configuration/micros_tool_inputs/COPY_HERE_THE_device_conn_cache.json
 include nolara/textual.tcss
 
