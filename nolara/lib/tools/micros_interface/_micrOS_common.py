@@ -10,8 +10,8 @@ except ImportError:
 
 DEVICE_CLIS = {}
 TOOL_CONFIG = Path(__file__).parent.parent.parent.parent / "configuration" / "micros_tools_devices.json"
-CONN_CACHE = Path(__file__).parent.parent.parent.parent / "configuration" / "device_conn_cache.json"
-
+CONN_CACHE = Path(__file__).parent.parent.parent.parent / "configuration" / "micros_tool_inputs" / "device_conn_cache.json"
+FUNC_DOC_CACHE  = Path(__file__).parent.parent.parent.parent / "configuration" / "micros_tool_inputs" / "sfuncman.json"
 
 def _feature_discovery(device: str) -> (list, list):
     """
@@ -67,10 +67,10 @@ def _feature_discovery(device: str) -> (list, list):
                     feature_data = {"command": _lm_call, "description": "Command can be called without modification."}
                     if _range is not None:
                         feature_data["range"] = _range
-                        feature_data["description"] = "range[0]=min value, range[1]=max value, range[2]=step value, Replace :range: with actual range values"
+                        feature_data["description"] = "range[0]=min value, range[1]=max value, range[2]=step value, Replace :range: placeholder."
                     if _options is not None:
                         feature_data["options"] = _options
-                        feature_data["description"] = "options[0]=option1, options[1]=option2, etc. Replace :options: with actual options values"
+                        feature_data["description"] = "options[0]=option1, options[1]=option2, etc. Replace :options: placeholder."
                     features_call_table.append(feature_data)
                     feature_list.add(widget["lm_call"].split()[0])
                 except Exception as e:
@@ -130,6 +130,38 @@ def _load_devtoolkit_conn_cache() -> list:
     print(f"{CONN_CACHE}\n\tDevices: {devices}")
     return devices
 
+def _inject_sfuncman_doc(config) -> dict:
+    """
+    Preload the sfuncman cache
+    """
+    try:
+        with open(FUNC_DOC_CACHE, "r") as f:
+            func_doc_cache = json.load(f)
+    except FileNotFoundError:
+        func_doc_cache = {}
+
+    for index, dev_config in enumerate(config):
+        feature_calls =  dev_config["metadata"]["feature_calls"]
+        for findex, device_feature in enumerate(feature_calls):
+            feature_command = device_feature["command"].split()
+            device_module = feature_command[0]
+            try:
+                device_function = feature_command[1]
+            except Exception as e:
+                print(f"Error parsing feature command: {feature_command}")
+                device_function = None
+            mod_doc = func_doc_cache.get(device_module, None)
+            if mod_doc is not None:
+                try:
+                    description = mod_doc.get(device_function).get("doc")
+                    config[index]["metadata"]["feature_calls"][findex]["description"] += description
+                except Exception as e:
+                    print(f"cannot parse doc for {device_module}.{device_function}.doc: {e}")
+                    description = ""
+                print(f"[SFUNCMAN] MOD: {device_module} FUNC: {device_function} DESCRIPTION: {description}")
+    return config
+
+
 def _create_device_config(name, location=None, features=None, feature_calls=None):
     features = features or []
     feature_calls = feature_calls or []
@@ -159,7 +191,7 @@ def load_device_config() -> list[dict]:
     return default_config
 
 
-def auto_feature_discovery(update_config=False):
+def auto_feature_discovery(update_config=False) -> list[dict]:
     # Load tool cache
     config = load_device_config()
     # Import toolkit connection cache devices
@@ -176,6 +208,9 @@ def auto_feature_discovery(update_config=False):
         features_details, features = _feature_discovery(device_name)
         config[index]["metadata"]["features"] = features
         config[index]["metadata"]["feature_calls"] = features_details
+    # Inject doc string
+    config = _inject_sfuncman_doc(config)
+    # Save changes if needed
     if update_config:
         with open(TOOL_CONFIG, "w") as f:
             json.dump(config, f, indent=4)
@@ -184,6 +219,7 @@ def auto_feature_discovery(update_config=False):
 
 def _test():
     # Example usage:
+    #tool_config = load_device_config()
     tool_config = auto_feature_discovery(update_config=True)
     for tc in tool_config:
         pprint(tc)
